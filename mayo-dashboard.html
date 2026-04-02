@@ -3950,6 +3950,16 @@ function renderMomentum(){
     sel.addEventListener('change',()=>{momRoundIdx=+sel.value;renderMomentumTimeline();});
   }
 
+  // Sync local dropdown to global round filter
+  const globalRound=document.getElementById('f-round').value;
+  if(globalRound!=='All'){
+    const idx=ms.findIndex(m=>m.round===globalRound);
+    if(idx>=0 && momRoundIdx!==idx){
+      momRoundIdx=idx;
+      document.getElementById('mom-round-sel').value=idx;
+    }
+  }
+
   document.getElementById('mom-kpis').innerHTML=[
     kpiCard({label:'Biggest Win',value:ms.reduce((a,m)=>m.mayoTotal-m.oppTotal>a.mayoTotal-a.oppTotal?m:a).opponent,unit:'',bench:'+'+Math.max(...ms.map(m=>m.mayoTotal-m.oppTotal))+' pts margin'}),
     kpiCard({label:'Biggest Loss',value:ms.reduce((a,m)=>m.mayoTotal-m.oppTotal<a.mayoTotal-a.oppTotal?m:a).opponent,unit:'',bench:Math.min(...ms.map(m=>m.mayoTotal-m.oppTotal))+' pts margin'}),
