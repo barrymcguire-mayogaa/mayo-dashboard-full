@@ -13,10 +13,10 @@
   --border:#E5E7EB;--text:#111827;--muted:#6B7280;--bg:#F7F9F8;--white:#FFFFFF;
   --warn:#D97706;--sidebar:288px
 }
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;font-size:14px}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;font-size:14px;overflow-x:hidden}
 
 /* SIDEBAR */
-#sidebar{width:var(--sidebar);min-height:100vh;background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;flex-shrink:0}
+#sidebar{width:var(--sidebar);min-height:100vh;background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;flex-shrink:0;transition:transform .25s ease,width .25s ease;z-index:100}
 .sidebar-header{padding:20px 24px 16px;border-bottom:1px solid var(--border)}
 .sidebar-header h1{font-size:16px;font-weight:700;color:var(--text)}
 .sidebar-header p{font-size:12px;color:var(--muted);margin-top:3px}
@@ -29,7 +29,7 @@ nav{padding:12px 12px;display:flex;flex-direction:column;gap:2px}
 
 /* MAIN */
 #main{flex:1;display:flex;flex-direction:column;min-width:0}
-#topbar{background:var(--white);border-bottom:1px solid var(--border);padding:14px 28px;position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+#topbar{background:var(--white);border-bottom:1px solid var(--border);padding:14px 28px;position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
 .topbar-title{font-size:18px;font-weight:700;color:var(--text)}
 .topbar-sub{font-size:12px;color:var(--muted)}
 .filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
@@ -38,7 +38,7 @@ nav{padding:12px 12px;display:flex;flex-direction:column;gap:2px}
 select{padding:5px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--text);background:var(--white);cursor:pointer;outline:none}
 select:focus{border-color:var(--green)}
 
-#content{padding:24px 28px;flex:1}
+#content{padding:24px 28px;flex:1;min-width:0}
 .tab-section{display:none}
 .tab-section.active{display:block}
 
@@ -64,6 +64,119 @@ select:focus{border-color:var(--green)}
 .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px}
 .grid-1{margin-bottom:16px}
 @media(max-width:900px){.grid-2,.grid-3{grid-template-columns:1fr}}
+
+/* ── MOBILE RESPONSIVE ─────────────────────────────────────────────── */
+/* Hamburger button */
+#mob-menu-btn{display:none;position:fixed;top:12px;left:12px;z-index:200;background:var(--green);border:none;border-radius:10px;width:42px;height:42px;cursor:pointer;align-items:center;justify-content:center;flex-direction:column;gap:5px;box-shadow:0 2px 8px rgba(0,0,0,0.2)}
+#mob-menu-btn span{display:block;width:22px;height:2px;background:#fff;border-radius:2px;transition:all .25s}
+#mob-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:90;backdrop-filter:blur(2px)}
+
+@media(max-width:768px){
+  /* Show hamburger, hide sidebar by default */
+  #mob-menu-btn{display:flex}
+  #mob-overlay.open{display:block}
+
+  /* Sidebar slides in from left */
+  #sidebar{position:fixed;top:0;left:0;height:100vh;z-index:100;transform:translateX(-100%);width:260px}
+  #sidebar.open{transform:translateX(0);box-shadow:4px 0 24px rgba(0,0,0,0.18)}
+
+  /* Main takes full width */
+  #main{width:100%;margin-left:0}
+
+  /* Topbar: stack title and filters */
+  #topbar{padding:12px 14px 12px 64px;gap:8px;flex-direction:column;align-items:flex-start}
+  .topbar-title{font-size:15px}
+  .topbar-sub{font-size:11px}
+  .filters{gap:6px;width:100%}
+  .filter-group{flex-direction:row;align-items:center;gap:6px;flex:1}
+  .filter-label{white-space:nowrap;font-size:9px}
+  select{font-size:11px;padding:4px 6px;flex:1;min-width:0}
+
+  /* Content padding */
+  #content{padding:14px 12px}
+
+  /* Page header */
+  .page-header h2{font-size:18px}
+  .page-header p{font-size:12px}
+
+  /* KPI cards: 2 per row on mobile */
+  .kpi-row{grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px}
+  .kpi-card{padding:12px 14px}
+  .kpi-card .kpi-value{font-size:22px}
+  .kpi-card .kpi-label{font-size:10px}
+
+  /* Cards */
+  .card{padding:14px 12px}
+  .card-title{font-size:12px;margin-bottom:10px}
+
+  /* Grid always single column on mobile */
+  .grid-2,.grid-3{grid-template-columns:1fr;gap:12px}
+  .grid-1{margin-bottom:12px}
+
+  /* Chart heights reduced slightly */
+  .chart-wrap[style*="height:240px"],.chart-wrap[style*="height:220px"]{height:200px!important}
+
+  /* Tables scroll horizontally */
+  .scroll-table{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table{font-size:12px;min-width:500px}
+  th,td{padding:6px 8px}
+
+  /* Player selector: stack vertically */
+  .player-select-row{flex-direction:column;align-items:flex-start;gap:12px;padding:14px}
+  .pl-avatar{width:80px;height:80px}
+  .pl-avatar-initials{font-size:28px}
+  .pl-header-name{font-size:16px;white-space:normal}
+
+  /* Pitch: scale down for mobile */
+  .gaa-pitch{min-height:380px}
+  .pitch-player{min-width:44px;max-width:56px}
+  .pitch-jersey{width:32px;height:32px;font-size:11px}
+  .pitch-name{font-size:8px;max-width:54px}
+
+  /* Score event log: stack single column */
+  #mom-timeline-list{max-height:400px}
+  .tl-player{font-size:11px}
+
+  /* Efficiency strip: stack on mobile */
+  .eff-strip-game{grid-template-columns:1fr}
+  .eff-side-game.opp{flex-direction:row}
+  .eff-big{font-size:32px}
+  .eff-side-game.opp .eff-info{text-align:left}
+
+  /* Comparison bars: shrink label */
+  .comp-label{width:80px;font-size:11px}
+  .comp-val-mayo,.comp-val-opp{width:28px;font-size:11px}
+
+  /* Round tabs: wrap tightly */
+  .ts-round-tabs{gap:4px}
+  .ts-tab{padding:5px 10px;font-size:11px}
+
+  /* Player select dropdown row in momentum/players */
+  .player-select-row label{font-size:11px}
+
+  /* BBC momentum chart height */
+  #mom-bbc-wrap .chart-wrap{height:160px!important}
+
+  /* Shot momentum sidebar */
+  #mom-shot-momentum-wrap{margin-top:12px}
+
+  /* Score event log + shot momentum: stack */
+  #tab-momentum .card > div[style*="grid-template-columns:1fr 1fr"]{display:flex!important;flex-direction:column!important}
+
+  /* Zone grid: 2 cols on mobile */
+  .zone-grid{grid-template-columns:repeat(2,1fr)}
+
+  /* Topbar round/half filters compact */
+  .filters{flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px}
+}
+
+@media(max-width:400px){
+  .kpi-row{grid-template-columns:1fr}
+  #topbar{padding:12px 10px 12px 58px}
+  .gaa-pitch{min-height:300px}
+  .pitch-jersey{width:26px;height:26px;font-size:9px}
+  .pitch-name{font-size:7px;max-width:44px}
+}
 
 /* SECTION CARD */
 .card{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:20px}
@@ -187,6 +300,10 @@ tr:hover td{background:#f9fafb}
 </head>
 <body>
 
+<button id="mob-menu-btn" aria-label="Open menu" onclick="toggleMobileMenu()">
+  <span></span><span></span><span></span>
+</button>
+<div id="mob-overlay" onclick="toggleMobileMenu()"></div>
 <aside id="sidebar">
   <div class="sidebar-header">
     <div class="sidebar-logo">
@@ -2315,6 +2432,21 @@ function mkChart(id,cfg){
   chartInstances[id]=new Chart(canvas,cfg);
   return chartInstances[id];
 }
+
+// ── MOBILE MENU ──────────────────────────────────────────────────────────────
+function toggleMobileMenu(){
+  const sidebar=document.getElementById('sidebar');
+  const overlay=document.getElementById('mob-overlay');
+  const isOpen=sidebar.classList.toggle('open');
+  overlay.classList.toggle('open',isOpen);
+  document.body.style.overflow=isOpen?'hidden':'';
+}
+// Close sidebar when a nav item is tapped on mobile
+document.getElementById('nav').addEventListener('click',function(e){
+  if(e.target.classList.contains('nav-item') && window.innerWidth<=768){
+    toggleMobileMenu();
+  }
+});
 
 // ── KPI card builder ─────────────────────────────────────────────────────────
 function kpiCard({label,value,unit,bench,benchDir,target,highlight}){
