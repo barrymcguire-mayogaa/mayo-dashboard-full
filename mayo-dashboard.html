@@ -3545,9 +3545,9 @@ function renderAttacking(){
         tooltip:{callbacks:{label:ctx=>`${ctx.raw}% (${mayoScoresPerPeriod[ctx.dataIndex]} scores from ${mayoAttPerPeriod[ctx.dataIndex]} attacks)`}}},
       scales:{y:{min:0,max:80,ticks:{callback:v=>v+'%'},grid:{color:BORDER}}}}});
 
-    mkChart('at-comp-chart',{type:'bar',data:{labels:PERIOD_LABELS_AT,datasets:[
-      {label:'Mayo Attacks', data:mayoAttPerPeriod, backgroundColor:GREEN+'CC',borderRadius:4},
-      {label:'Opp Attacks',  data:oppAttPerPeriod,  backgroundColor:RED+'88', borderRadius:4},
+    mkChart('at-comp-chart',{type:'line',data:{labels:PERIOD_LABELS_AT,datasets:[
+      {label:'Mayo Attacks', data:mayoAttPerPeriod, borderColor:GREEN,backgroundColor:GREEN+'22',pointBackgroundColor:GREEN,tension:.3,fill:false,pointRadius:4,pointHoverRadius:6},
+      {label:'Opp Attacks',  data:oppAttPerPeriod,  borderColor:RED,  backgroundColor:RED+'22',  pointBackgroundColor:RED,  tension:.3,fill:false,pointRadius:4,pointHoverRadius:6},
     ]},options:{responsive:true,maintainAspectRatio:false,
       plugins:{legend:{position:'bottom',labels:{boxWidth:10}}},
       scales:{y:{min:0,ticks:{stepSize:1},grid:{color:BORDER}}}}});
@@ -3564,9 +3564,9 @@ function renderAttacking(){
       borderRadius:6,
     }]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:80,grid:{color:BORDER}}}}});
 
-    mkChart('at-comp-chart',{type:'bar',data:{labels,datasets:[
-      {label:'Mayo Attacks',data:ms.map(m=>m.mayoAttacks),backgroundColor:GREEN+'CC',borderRadius:4},
-      {label:'Opp Attacks',data:ms.map(m=>m.oppAttacks),backgroundColor:RED+'88',borderRadius:4},
+    mkChart('at-comp-chart',{type:'line',data:{labels,datasets:[
+      {label:'Mayo Attacks',data:ms.map(m=>m.mayoAttacks),borderColor:GREEN,backgroundColor:GREEN+'22',pointBackgroundColor:GREEN,tension:.3,fill:false,pointRadius:4,pointHoverRadius:6},
+      {label:'Opp Attacks',data:ms.map(m=>m.oppAttacks),borderColor:RED,backgroundColor:RED+'22',pointBackgroundColor:RED,tension:.3,fill:false,pointRadius:4,pointHoverRadius:6},
     ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:10}}},scales:{y:{grid:{color:BORDER}}}}});
   }
 
