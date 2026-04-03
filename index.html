@@ -169,9 +169,10 @@ select:focus{border-color:var(--green)}
   /* Kickout GK comparison: stack single column */
   .ko-gk-grid{grid-template-columns:1fr!important}
 
-  /* Radar chart: full width on mobile, taller to match Score Sources */
-  .ov-radar-card{width:100%}
-  .ov-radar-card .chart-wrap{height:280px!important}
+  /* Radar chart: full width, overflow contained, auto height */
+  .ov-radar-card{width:100%;overflow:hidden}
+  .ov-radar-card .chart-wrap{height:auto!important;overflow:hidden}
+  .ov-radar-card canvas{max-width:100%!important;width:100%!important}
 
   /* Results summary: full scrollable height */
   #ov-results-table table{min-width:480px}
@@ -2458,6 +2459,26 @@ document.getElementById('nav').addEventListener('click',function(e){
   }
 });
 
+// ── iOS scroll containment fix ────────────────────────────────────────────────
+// overscroll-behavior:contain is not supported on iOS Safari; use touchmove instead
+document.addEventListener('touchmove',function(e){
+  // Walk up from the touch target to find a scrollable ancestor
+  let el=e.target;
+  while(el&&el!==document.body){
+    const style=window.getComputedStyle(el);
+    const overflowY=style.overflowY;
+    const canScroll=(overflowY==='auto'||overflowY==='scroll');
+    if(canScroll&&el.scrollHeight>el.clientHeight){
+      // Allow scroll but stop it reaching the page
+      const atTop=el.scrollTop===0;
+      const atBottom=el.scrollTop+el.clientHeight>=el.scrollHeight;
+      if((atTop&&e.touches[0].clientY>0)||(atBottom&&e.touches[0].clientY<0)) e.preventDefault();
+      return; // let the element scroll
+    }
+    el=el.parentElement;
+  }
+},{passive:false});
+
 // ── KPI card builder ─────────────────────────────────────────────────────────
 function kpiCard({label,value,unit,bench,benchDir,target,highlight}){
   const disp = unit==='pct' ? pct(value) : unit==='int' ? value : value;
@@ -2541,7 +2562,7 @@ function renderOverview(){
       ],
       borderColor:GREEN,backgroundColor:GREEN+'33',pointBackgroundColor:GREEN,
     }]
-  },options:{responsive:true,maintainAspectRatio:false,scales:{r:{min:0,max:100,ticks:{display:false},grid:{color:BORDER}}},plugins:{legend:{display:false}}}});
+  },options:{responsive:true,maintainAspectRatio:true,scales:{r:{min:0,max:100,ticks:{display:false},grid:{color:BORDER}}},plugins:{legend:{display:false}}}});
 
   // ── Score Sources panel ──
   const ss=SCORE_SOURCES;
