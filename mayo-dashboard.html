@@ -376,14 +376,23 @@ tr:hover td{background:#f9fafb}
           <div class="chart-wrap" style="height:220px"><canvas id="ov-margin-chart"></canvas></div>
         </div>
       </div>
-      <div class="grid-2">
+      <div class="grid-1">
         <div class="card">
           <div class="card-title">Results Summary</div>
           <div class="scroll-table" style="max-height:340px;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch"><div id="ov-results-table"></div></div>
         </div>
+      </div>
+      <div class="grid-1">
         <div class="card ov-radar-card">
           <div class="card-title">Season KPI Radar</div>
-          <div id="ov-radar-wrap" class="chart-wrap" style="height:220px"><canvas id="ov-radar-chart"></canvas></div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px 20px;margin-bottom:14px;padding:10px 12px;background:var(--bg);border-radius:8px;border:1px solid var(--border)">
+            <span style="font-size:11px;color:var(--muted)"><b style="color:var(--text)">Shot Acc</b> — Scores ÷ shots taken (%)</span>
+            <span style="font-size:11px;color:var(--muted)"><b style="color:var(--text)">KO Win%</b> — Kickouts won ÷ total kickouts (%)</span>
+            <span style="font-size:11px;color:var(--muted)"><b style="color:var(--text)">Attack Conv</b> — Shot attempts ÷ attacking possessions (%)</span>
+            <span style="font-size:11px;color:var(--muted)"><b style="color:var(--text)">Scoring Rate</b> — Points scored ÷ attacks, scaled ×10</span>
+            <span style="font-size:11px;color:var(--muted)"><b style="color:var(--text)">Opp Resist</b> — 100 minus opposition shot accuracy (higher = better defence)</span>
+          </div>
+          <div id="ov-radar-wrap" class="chart-wrap" style="height:300px"><canvas id="ov-radar-chart"></canvas></div>
         </div>
       </div>
       <div class="grid-2">
@@ -2562,8 +2571,8 @@ function renderOverview(){
       borderColor:GREEN,backgroundColor:GREEN+'33',pointBackgroundColor:GREEN,
     }]
   },options:{responsive:true,maintainAspectRatio:false,
-    layout:{padding:isMobile?{top:24,bottom:24,left:36,right:36}:10},
-    scales:{r:{min:0,max:100,ticks:{display:false},grid:{color:BORDER},pointLabels:{font:{size:isMobile?8:11}}}},
+    layout:{padding:isMobile?{top:22,bottom:22,left:32,right:32}:{top:20,bottom:20,left:50,right:50}},
+    scales:{r:{min:0,max:100,ticks:{display:false},grid:{color:BORDER},pointLabels:{font:{size:isMobile?9:13}}}},
     plugins:{legend:{display:false}}}});
 
   // ── Score Sources panel ──
