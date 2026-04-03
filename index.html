@@ -169,10 +169,10 @@ select:focus{border-color:var(--green)}
   /* Kickout GK comparison: stack single column */
   .ko-gk-grid{grid-template-columns:1fr!important}
 
-  /* Radar chart: full width, overflow contained, auto height */
-  .ov-radar-card{width:100%;overflow:hidden}
-  .ov-radar-card .chart-wrap{height:auto!important;overflow:hidden}
-  .ov-radar-card canvas{max-width:100%!important;width:100%!important}
+  /* Radar chart: match width of other cards, fixed height, hard clip */
+  .ov-radar-card{width:100%;overflow:hidden;box-sizing:border-box}
+  .ov-radar-card .chart-wrap{height:260px!important;overflow:hidden;max-width:100%}
+  .ov-radar-card canvas{max-width:100%!important;height:260px!important}
 
   /* Results summary: full scrollable height */
   #ov-results-table table{min-width:480px}
@@ -2562,7 +2562,7 @@ function renderOverview(){
       ],
       borderColor:GREEN,backgroundColor:GREEN+'33',pointBackgroundColor:GREEN,
     }]
-  },options:{responsive:true,maintainAspectRatio:true,scales:{r:{min:0,max:100,ticks:{display:false},grid:{color:BORDER}}},plugins:{legend:{display:false}}}});
+  },options:{responsive:true,maintainAspectRatio:false,scales:{r:{min:0,max:100,ticks:{display:false},grid:{color:BORDER}}},plugins:{legend:{display:false}}}});
 
   // ── Score Sources panel ──
   const ss=SCORE_SOURCES;
