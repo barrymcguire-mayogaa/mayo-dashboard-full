@@ -1,0 +1,24 @@
+# XML match timeline files — local/Drive only, data already extracted into HTML
+NFL Timelines/
+
+# Extracted working files — data already baked into the HTML
+momentumEvents.js
+OPP_SHOT_MAP_DATA.js
+PERIOD_ATTACK_DATA.js
+PERIOD_ATTACK_DATA_V2.js
+PLAYER_ATTACK_META.js
+PLAYER_DEF_META.js
+SHOT_MAP_DATA.js
+SHOT_MAP_DATA_v2.js
+
+# Working folders — local/Drive only
+Analysis PDFs/
+Design guides/
+Team Sheets/
+
+# macOS system files
+.DS_Store
+**/.DS_Store
+
+# Claude Code project files — local only
+.claude/
