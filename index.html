@@ -2547,13 +2547,18 @@ function renderOverview(){
   document.getElementById('ov-results-table').innerHTML=resultsTable(ms);
 
   // Radar
-  // On mobile, shrink the radar wrap before Chart.js measures it
+  // On mobile, constrain the card itself to 250px so Chart.js measures correctly
   const radarWrap=document.getElementById('ov-radar-wrap');
+  const radarCard=radarWrap.closest('.ov-radar-card');
   if(window.innerWidth<=768){
-    radarWrap.style.height='160px';
-    radarWrap.style.maxWidth='55%';
-    radarWrap.style.margin='0 auto';
+    radarCard.style.maxWidth='250px';
+    radarCard.style.margin='0 auto';
+    radarWrap.style.height='220px';
+    radarWrap.style.maxWidth='100%';
+    radarWrap.style.margin='';
   } else {
+    radarCard.style.maxWidth='';
+    radarCard.style.margin='';
     radarWrap.style.height='220px';
     radarWrap.style.maxWidth='';
     radarWrap.style.margin='';
