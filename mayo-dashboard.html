@@ -599,7 +599,7 @@ tr:hover td{background:#f9fafb}
       </div>
       <div class="kpi-row" id="def-kpis"></div>
       <div class="card grid-1" style="margin-bottom:0">
-        <div class="card-title">Top 3 Defensive Players — Tackles · Hits · Turnovers Forced</div>
+        <div class="card-title">Top 3 Defensive Players — Tackles Won · Attempts · Turnovers Forced</div>
         <div id="def-top3"></div>
       </div>
       <div class="card grid-1" style="margin-bottom:0">
@@ -2526,6 +2526,8 @@ function renderOverview(){
   const avgShotAcc=ms.reduce((a,m)=>a+m.mayoShotAcc,0)/ms.length;
   const avgKOWin=ms.reduce((a,m)=>a+m.mayoKOWin,0)/ms.length;
   const avgMargin=ms.reduce((a,m)=>a+(m.mayoTotal-m.oppTotal),0)/ms.length;
+  const avgMayoScore=ms.reduce((a,m)=>a+m.mayoTotal,0)/ms.length;
+  const avgOppScore=ms.reduce((a,m)=>a+m.oppTotal,0)/ms.length;
   const wins=ms.filter(m=>m.result==='W').length;
   const oppAvgAcc=ms.reduce((a,m)=>a+m.oppShotAcc,0)/ms.length;
 
@@ -2533,6 +2535,7 @@ function renderOverview(){
     kpiCard({label:'Win Rate',value:+(wins/ms.length*100).toFixed(0),unit:'pct',target:60,bench:'Based on '+ms.length+' games'}),
     kpiCard({label:'Shot Accuracy',value:+avgShotAcc.toFixed(1),unit:'pct',target:52,highlight:avgShotAcc>=52?'good':'bad'}),
     kpiCard({label:'KO Win %',value:+avgKOWin.toFixed(1),unit:'pct',target:60,highlight:avgKOWin>=60?'good':'bad'}),
+    kpiCard({label:'Avg Score',value:+avgMayoScore.toFixed(1),unit:'pts',bench:'Opp avg: '+avgOppScore.toFixed(1)+' pts'}),
     kpiCard({label:'Avg Score Margin',value:avgMargin.toFixed(1),unit:'pts',bench:avgMargin>0?'Positive season avg':'Negative avg'}),
     kpiCard({label:'Opp Shot Acc',value:+oppAvgAcc.toFixed(1),unit:'pct',bench:'Defensive concession rate',benchDir:'lower'}),
     kpiCard({label:'Record',value:wins+'-'+(ms.length-wins),unit:'',bench:ms.length+' rounds played'}),
@@ -2859,6 +2862,9 @@ function renderShootingTop3(){
     }
     if(!matches) return null;
     a.name=name; a.matches=matches; a.totalShots=a.play+a.deadball;
+    // points value: goals=3pts, 2pt=2pts, remaining play scores=1pt
+    a.playpts=2*a.goals+a.pt2+a.playMade; // = goals×3 + pt2×2 + (playMade-goals-pt2)×1
+    a.dbpts=a.deadballMade;
     return a;
   }
   const allPlayers=Object.keys(SHOT_META).map(aggPlayer).filter(Boolean);
@@ -2867,6 +2873,8 @@ function renderShootingTop3(){
   const filters=[
     {key:'play',    label:'Shots from Play'},
     {key:'deadball',label:'Shots from Deadball'},
+    {key:'playpts', label:'Points from Play'},
+    {key:'dbpts',   label:'Points from DB'},
     {key:'goals',   label:'Goals'},
     {key:'pt2',     label:'2-Pointers'},
     {key:'pt1',     label:'1-Pointers'},
@@ -2888,6 +2896,8 @@ function renderShootingTop3(){
     const pct=(n,d)=>d>0?Math.round(100*n/d)+'%':'—';
     if(active==='play')    return [{v:p.play,l:'Play Shots'},{v:pct(p.playMade,p.play),l:'Conv. %'},{v:p.playMade,l:'Scored'},{v:p.play-p.playMade,l:'Missed'}];
     if(active==='deadball')return [{v:p.deadball,l:'DB Shots'},{v:pct(p.deadballMade,p.deadball),l:'Conv. %'},{v:p.deadballMade,l:'Scored'},{v:p.deadball-p.deadballMade,l:'Missed'}];
+    if(active==='playpts') return [{v:p.playpts,l:'Play Pts'},{v:p.playMade,l:'Scores'},{v:p.goals,l:'Goals'},{v:p.pt2,l:'2-Ptrs'}];
+    if(active==='dbpts')   return [{v:p.dbpts,l:'DB Pts'},{v:pct(p.deadballMade,p.deadball),l:'Conv. %'},{v:p.deadball,l:'Attempts'},{v:p.matches,l:'Games'}];
     if(active==='goals')   return [{v:p.goals,l:'Goals'},{v:pct(p.goals,p.goalAtt),l:'Goal Conv.'},{v:p.goalAtt,l:'Attempts'},{v:p.totalShots,l:'Total Shots'}];
     if(active==='pt2')     return [{v:p.pt2,l:'2-Pointers'},{v:pct(p.pt2,p.pt2Att),l:'Conv. %'},{v:p.pt2Att,l:'Attempts'},{v:p.totalShots,l:'Total Shots'}];
     /* pt1 */              return [{v:p.pt1,l:'1-Pointers'},{v:pct(p.pt1,p.pt1Att),l:'Conv. %'},{v:p.pt1Att,l:'Attempts'},{v:p.totalShots,l:'Total Shots'}];
@@ -3883,15 +3893,15 @@ function renderDefensive(){
       <div style="width:100%;display:grid;grid-template-columns:1fr 1fr;gap:6px;text-align:center">
         <div style="background:#fff;border-radius:8px;padding:8px 4px">
           <div style="font-size:20px;font-weight:900;color:var(--green-dark)">${d.tackles}</div>
-          <div style="font-size:10px;color:var(--muted);font-weight:600">Tackles</div>
+          <div style="font-size:10px;color:var(--muted);font-weight:600">Won</div>
+        </div>
+        <div style="background:#fff;border-radius:8px;padding:8px 4px">
+          <div style="font-size:20px;font-weight:900;color:var(--green-dark)">${d.attempts}</div>
+          <div style="font-size:10px;color:var(--muted);font-weight:600">Att.</div>
         </div>
         <div style="background:#fff;border-radius:8px;padding:8px 4px">
           <div style="font-size:20px;font-weight:900;color:var(--green-dark)">${d.tacklePct}%</div>
           <div style="font-size:10px;color:var(--muted);font-weight:600">Success%</div>
-        </div>
-        <div style="background:#fff;border-radius:8px;padding:8px 4px">
-          <div style="font-size:20px;font-weight:900;color:var(--green-dark)">${d.hits}</div>
-          <div style="font-size:10px;color:var(--muted);font-weight:600">Hits</div>
         </div>
         <div style="background:#fff;border-radius:8px;padding:8px 4px">
           <div style="font-size:20px;font-weight:900;color:var(--green-dark)">${d.toForced}</div>
@@ -4155,6 +4165,7 @@ function renderBBCMomentum(m){
   const BUCKETS=35; // 35 × 2-min windows = 70 mins
   const mayo=new Array(BUCKETS).fill(0);
   const opp =new Array(BUCKETS).fill(0);
+  const bucketDetail=Array.from({length:BUCKETS},()=>({mayo:{goals:0,pt2:0,pt1:0},opp:{goals:0,pt2:0,pt1:0}}));
 
   function absMin(timeSecs){
     if(timeSecs<htStart) return timeSecs/60;
@@ -4180,6 +4191,8 @@ function renderBBCMomentum(m){
     const b=bucket(ev.time);
     const isMayo=(ev.team||'').toUpperCase()==='MAYO';
     if(isMayo) mayo[b]+=pts; else opp[b]+=pts;
+    const side=isMayo?bucketDetail[b].mayo:bucketDetail[b].opp;
+    if(ev.type==='goal') side.goals++; else if(ev.type==='2pt') side.pt2++; else side.pt1++;
     const emoji=ev.type==='goal'?'\ud83c\udfd0':ev.type==='2pt'?'\ud83d\udea9':'\ud83c\udff3\ufe0f';
     scoreMarkers.push({b,isMayo,emoji,pts});
   });
@@ -4190,7 +4203,7 @@ function renderBBCMomentum(m){
   // Custom plugin: emoji markers + halftime line
   const bbcPlugin={
     id:'bbcPlugin',
-    afterDraw(chart){
+    afterDatasetsDraw(chart){
       const ctx=chart.ctx;
       const yScale=chart.scales.y;
       const xScale=chart.scales.x;
@@ -4245,7 +4258,18 @@ function renderBBCMomentum(m){
         legend:{display:false},
         tooltip:{callbacks:{
           title:ctx=>'Min '+(ctx[0].dataIndex*2)+'\u2013'+(ctx[0].dataIndex*2+2),
-          label:ctx=>{const v=Math.abs(ctx.raw);return ctx.dataset.label+': '+v+' momentum pts';}
+          label:ctx=>{
+            const v=Math.abs(ctx.raw);
+            if(!v) return ctx.dataset.label+': 0 momentum pts';
+            const isMayoDs=ctx.datasetIndex===0;
+            const d=bucketDetail[ctx.dataIndex];
+            const side=isMayoDs?d.mayo:d.opp;
+            const lines=[ctx.dataset.label+': '+v+' momentum pts'];
+            if(side.goals) lines.push('  \ud83c\udfd0 '+side.goals+'\u00d7 Goal (\u00d75 = '+(side.goals*5)+' pts)');
+            if(side.pt2)   lines.push('  \ud83d\udea9 '+side.pt2+'\u00d7 2-Pt (\u00d74 = '+(side.pt2*4)+' pts)');
+            if(side.pt1)   lines.push('  \ud83c\udff3\ufe0f '+side.pt1+'\u00d7 1-Pt (\u00d73 = '+(side.pt1*3)+' pts)');
+            return lines;
+          }
         }}
       },
       scales:{
