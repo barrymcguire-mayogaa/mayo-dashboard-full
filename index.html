@@ -446,7 +446,7 @@ tr:hover td{background:#f9fafb}
         <div id="opp-ko-map-wrap"></div>
       </div>
       <div class="card grid-1" style="margin-top:16px">
-        <div class="card-title">Mayo KO Winners — Player Totals <span class="badge">Season</span></div>
+        <div class="card-title">KO Winners by Player — Mayo &amp; Opposition <span class="badge">Season</span></div>
         <div class="chart-wrap" style="height:320px"><canvas id="ko-player-chart"></canvas></div>
       </div>
       <div class="card grid-1" style="margin-top:16px">
@@ -1819,17 +1819,40 @@ const TACKLE_COUNTS_PER_PLAYER={
   "Rd.7":{"David McBrien":8,"Jack Carney":7,"Michael Plunkett":6,"Sam Callinan":6,"Jack Coyne":6,"Seamus Howard":6,"Diarmuid Duffy":5,"Paul Towey":4,"Ryan O'Donoghue":3,"John MacMonagle":3,"Rory Brickenden":2,"Aidan O'Shea":2,"Jordan Flynn":2,"Cian McHale":2,"Cillian O'Connor":2,"Hugh O'Loughlin":1},
 };
 
-// ── Mayo KO wins per player — season totals (from MAYO KO XML events, 'Mayo Player Labels' winner)
+// ── KO wins per player — from 'Kickout Won' label, timestamp-matched to KO events ──
+// Goalkeepers (Hennelly/Livingstone) excluded from field-player constants; included where noted
 const MAYO_KO_WON_BY_PLAYER={
-  "Bob Tuohy":20,"Jack Carney":20,"Jordan Flynn":8,"Enda Hession":7,
-  "Ryan O'Donoghue":6,"Sam Callinan":6,"Aidan O'Shea":4,"Rory Brickenden":4,
-  "Jack Coyne":4,"Diarmuid O'Connor":3,"David McBrien":2,"Donnacha McHugh":2,
-  "Paddy Durcan":2,"Seamus Howard":2,"Diarmuid Duffy":2,"Conor Loftus":2,
-  "Kobe McDonald":2,"Hugh O'Loughlin":2,"Fenton Kelly":1,"John MacMonagle":1,
-  "Seán Morahan":1,
+  "Bob Tuohy":18,"Jack Carney":19,"Jordan Flynn":10,"Enda Hession":8,
+  "Jack Livingstone":15,"Diarmuid O'Connor":4,"Aidan O'Shea":4,"Jack Coyne":4,
+  "Rory Brickenden":4,"Ryan O'Donoghue":5,"Sam Callinan":7,"David McBrien":3,
+  "Paddy Durcan":3,"Seamus Howard":3,"Diarmuid Duffy":2,"Conor Loftus":2,
+  "Kobe McDonald":2,"Hugh O'Loughlin":2,"Donnacha McHugh":1,"Fenton Kelly":1,
+  "John MacMonagle":1,"Seán Morahan":2,
 };
-// Note: Opposition KO events in the XML do not carry Mayo player labels —
-// per-player Opp KO won data is not available from this data source.
+const OPP_KO_WON_BY_PLAYER={
+  "Bob Tuohy":18,"David McBrien":8,"Jordan Flynn":7,"Conor Loftus":4,
+  "Jack Carney":4,"Sam Callinan":3,"Seamus Howard":3,"Conal Dawson":2,
+  "Fergal Boland":2,"Hugh O'Loughlin":2,"Aidan O'Shea":1,"Enda Hession":1,
+  "Jack Coyne":1,"Rory Brickenden":1,"Stephen Coen":1,"Tommy Conroy":1,
+};
+const MAYO_KO_WON_PER_ROUND={
+  "Rd.1":{"Bob Tuohy":7,"Enda Hession":1,"Jack Carney":4,"Jordan Flynn":1},
+  "Rd.2":{"Aidan O'Shea":1,"Bob Tuohy":3,"David McBrien":1,"Enda Hession":2,"Jordan Flynn":5,"Rory Brickenden":1},
+  "Rd.3":{"Aidan O'Shea":1,"Bob Tuohy":1,"Diarmuid Duffy":1,"Diarmuid O'Connor":1,"Enda Hession":3,"Fenton Kelly":1,"Jack Coyne":2,"Paddy Durcan":1,"Rory Brickenden":1,"Ryan O'Donoghue":3,"Sam Callinan":1,"Seamus Howard":1},
+  "Rd.4":{"Aidan O'Shea":1,"Bob Tuohy":5,"Conor Loftus":2,"Jack Carney":4,"Jack Coyne":1,"Jordan Flynn":1,"Paddy Durcan":1},
+  "Rd.5":{"Aidan O'Shea":1,"Bob Tuohy":1,"David McBrien":1,"Enda Hession":2,"Jack Carney":3,"Jordan Flynn":2,"Kobe McDonald":1,"Paddy Durcan":1,"Ryan O'Donoghue":1,"Sam Callinan":2},
+  "Rd.6":{"Bob Tuohy":1,"David McBrien":1,"Diarmuid O'Connor":3,"Donnacha McHugh":1,"Jack Carney":2,"Jack Coyne":1,"Jordan Flynn":1,"Kobe McDonald":1,"Rory Brickenden":2,"Sam Callinan":3,"Seán Morahan":1},
+  "Rd.7":{"Diarmuid Duffy":1,"Hugh O'Loughlin":2,"Jack Carney":6,"Jack Livingstone":15,"John MacMonagle":1,"Ryan O'Donoghue":1,"Sam Callinan":1,"Seamus Howard":2,"Seán Morahan":1},
+};
+const OPP_KO_WON_PER_ROUND={
+  "Rd.1":{"Bob Tuohy":4,"Conal Dawson":2,"David McBrien":4,"Jordan Flynn":1,"Tommy Conroy":1},
+  "Rd.2":{"Bob Tuohy":2,"David McBrien":1,"Enda Hession":1,"Fergal Boland":1,"Jordan Flynn":1},
+  "Rd.3":{"Bob Tuohy":2,"Conor Loftus":2,"Fergal Boland":1,"Jack Carney":1,"Jordan Flynn":1,"Sam Callinan":1},
+  "Rd.4":{"Bob Tuohy":8,"Conor Loftus":1,"David McBrien":1,"Jack Carney":2,"Jordan Flynn":2},
+  "Rd.5":{"Aidan O'Shea":1,"Bob Tuohy":2,"Conor Loftus":1,"Jack Coyne":1,"Jordan Flynn":1,"Sam Callinan":1},
+  "Rd.6":{"David McBrien":1,"Jack Carney":1,"Jordan Flynn":1,"Rory Brickenden":1,"Sam Callinan":1,"Stephen Coen":1},
+  "Rd.7":{"David McBrien":1,"Hugh O'Loughlin":2,"Seamus Howard":3},
+};
 
 // ── Block data (extracted from XML — shot blocks by each team) ───────────────
 const BLOCK_DATA={
@@ -2791,25 +2814,31 @@ function renderKickouts(){
   renderKoPitchMap();
   renderOppKoPitchMap();
 
-  // ── Mayo KO Winners — Player chart ────────────────────────────────────────
-  const koSorted=Object.entries(MAYO_KO_WON_BY_PLAYER)
-    .sort((a,b)=>b[1]-a[1]);
-  const koLabels=koSorted.map(([n])=>n.split(' ').pop()); // surname only
-  const koVals=koSorted.map(([,v])=>v);
+  // ── KO Winners chart — Mayo KOs Won + Opp KOs Won per player (excl. GK) ────
+  const GK_NAMES=new Set(['Rob Hennelly','Jack Livingstone']);
+  const allKOPlayers=new Set([
+    ...Object.keys(MAYO_KO_WON_BY_PLAYER).filter(n=>!GK_NAMES.has(n)),
+    ...Object.keys(OPP_KO_WON_BY_PLAYER).filter(n=>!GK_NAMES.has(n)),
+  ]);
+  const koSorted=[...allKOPlayers]
+    .map(n=>({n,mayo:MAYO_KO_WON_BY_PLAYER[n]||0,opp:OPP_KO_WON_BY_PLAYER[n]||0}))
+    .sort((a,b)=>(b.mayo+b.opp)-(a.mayo+a.opp));
+  const koLabels=koSorted.map(d=>d.n.split(' ').pop());
   mkChart('ko-player-chart',{type:'bar',
     data:{labels:koLabels,
-      datasets:[{label:'Mayo KOs Won',data:koVals,backgroundColor:GREEN+'CC',borderRadius:5}]},
+      datasets:[
+        {label:'Mayo KOs Won',data:koSorted.map(d=>d.mayo),backgroundColor:GREEN+'CC',borderRadius:4,stack:'s'},
+        {label:'Opp KOs Won', data:koSorted.map(d=>d.opp), backgroundColor:'#3B82F6CC',borderRadius:4,stack:'s'},
+      ]},
     options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},
+      plugins:{legend:{position:'bottom',labels:{boxWidth:12}},
         tooltip:{callbacks:{
-          title:ctx=>{
-            // Full name from sorted list
-            return koSorted[ctx[0].dataIndex][0];
-          },
-          label:ctx=>`${ctx.parsed.y} Mayo KOs won`}}},
+          title:ctx=>koSorted[ctx[0].dataIndex].n,
+          afterBody:ctx=>[`Total KOs won: ${koSorted[ctx[0].dataIndex].mayo+koSorted[ctx[0].dataIndex].opp}`],
+        }}},
       scales:{
-        y:{ticks:{stepSize:2},grid:{color:BORDER},title:{display:true,text:'KOs Won',font:{size:11}}},
-        x:{grid:{display:false},ticks:{font:{size:11}}}}}});
+        y:{ticks:{stepSize:2},grid:{color:BORDER},stacked:true},
+        x:{grid:{display:false},stacked:true,ticks:{font:{size:11}}}}}});
 }
 
 // ── SHOOTING ─────────────────────────────────────────────────────────────────
@@ -4660,19 +4689,28 @@ function renderPlayerDetail(){
     return a+(p.possessions>0?(p.kickpasses+pm.handpasses)/p.possessions*100:0);
   },0)/allNames.length;
 
-  // Mayo KOs won per game
+  // KOs won per game (exclude GKs from squad average calculation)
+  const KO_GK=new Set(['Rob Hennelly','Jack Livingstone']);
   const playerMayoKOWon=MAYO_KO_WON_BY_PLAYER[name]||0;
-  const avgMayoKOWon=Object.entries(MAYO_KO_WON_BY_PLAYER).reduce((a,[n,v])=>{
+  const playerOppKOWon=OPP_KO_WON_BY_PLAYER[name]||0;
+  const koFieldPlayers=Object.keys(MAYO_KO_WON_BY_PLAYER).filter(n=>!KO_GK.has(n));
+  const koOppFieldPlayers=Object.keys(OPP_KO_WON_BY_PLAYER).filter(n=>!KO_GK.has(n));
+  const avgMayoKOWon=koFieldPlayers.reduce((a,n)=>{
     const m=RAW.seasonPlayers[n]?RAW.seasonPlayers[n].matches:1;
-    return a+v/m;
-  },0)/Object.keys(MAYO_KO_WON_BY_PLAYER).length;
+    return a+(MAYO_KO_WON_BY_PLAYER[n]||0)/m;
+  },0)/koFieldPlayers.length;
+  const avgOppKOWon=koOppFieldPlayers.reduce((a,n)=>{
+    const m=RAW.seasonPlayers[n]?RAW.seasonPlayers[n].matches:1;
+    return a+(OPP_KO_WON_BY_PLAYER[n]||0)/m;
+  },0)/koOppFieldPlayers.length;
 
   const stats=[
     {label:'Pts/Game',player:sp.points/sp.matches,avg:avgSeasonPts,max:8},
     {label:'Shots/Game',player:sp.shots/sp.matches,avg:avgSeasonShots,max:8},
     {label:'Tackles/Game',player:sp.tackles/sp.matches,avg:avgSeasonTackles,max:15},
     {label:'Pass Compl %',player:passComp,avg:avgPassComp,max:100},
-    {label:'Mayo KOs Won',player:playerMayoKOWon/sp.matches,avg:avgMayoKOWon,max:5,isInt:true,total:playerMayoKOWon},
+    {label:'Mayo KOs Won',player:playerMayoKOWon/sp.matches,avg:avgMayoKOWon,max:5,total:playerMayoKOWon},
+    {label:'Opp KOs Won', player:playerOppKOWon/sp.matches, avg:avgOppKOWon, max:5,total:playerOppKOWon},
   ];
   document.getElementById('pl-vs-avg').innerHTML=stats.map(s=>{
     const pp=Math.min(s.player/s.max*100,100).toFixed(0);
