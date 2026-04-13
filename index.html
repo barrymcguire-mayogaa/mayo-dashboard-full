@@ -446,6 +446,10 @@ tr:hover td{background:#f9fafb}
         <div id="opp-ko-map-wrap"></div>
       </div>
       <div class="card grid-1" style="margin-top:16px">
+        <div class="card-title">Mayo KO Winners — Player Totals <span class="badge">Season</span></div>
+        <div class="chart-wrap" style="height:320px"><canvas id="ko-player-chart"></canvas></div>
+      </div>
+      <div class="card grid-1" style="margin-top:16px">
         <div class="card-title">Mayo Kickout Zone Breakdown <span class="badge">By Length &amp; Pitch Channel</span></div>
         <div id="mayo-ko-zone-wrap"></div>
       </div>
@@ -1815,6 +1819,18 @@ const TACKLE_COUNTS_PER_PLAYER={
   "Rd.7":{"David McBrien":8,"Jack Carney":7,"Michael Plunkett":6,"Sam Callinan":6,"Jack Coyne":6,"Seamus Howard":6,"Diarmuid Duffy":5,"Paul Towey":4,"Ryan O'Donoghue":3,"John MacMonagle":3,"Rory Brickenden":2,"Aidan O'Shea":2,"Jordan Flynn":2,"Cian McHale":2,"Cillian O'Connor":2,"Hugh O'Loughlin":1},
 };
 
+// ── Mayo KO wins per player — season totals (from MAYO KO XML events, 'Mayo Player Labels' winner)
+const MAYO_KO_WON_BY_PLAYER={
+  "Bob Tuohy":20,"Jack Carney":20,"Jordan Flynn":8,"Enda Hession":7,
+  "Ryan O'Donoghue":6,"Sam Callinan":6,"Aidan O'Shea":4,"Rory Brickenden":4,
+  "Jack Coyne":4,"Diarmuid O'Connor":3,"David McBrien":2,"Donnacha McHugh":2,
+  "Paddy Durcan":2,"Seamus Howard":2,"Diarmuid Duffy":2,"Conor Loftus":2,
+  "Kobe McDonald":2,"Hugh O'Loughlin":2,"Fenton Kelly":1,"John MacMonagle":1,
+  "Seán Morahan":1,
+};
+// Note: Opposition KO events in the XML do not carry Mayo player labels —
+// per-player Opp KO won data is not available from this data source.
+
 // ── Block data (extracted from XML — shot blocks by each team) ───────────────
 const BLOCK_DATA={
   mayo:  {"Rd.1":2,"Rd.2":2,"Rd.3":0,"Rd.4":0,"Rd.5":2,"Rd.6":3,"Rd.7":3},
@@ -2774,6 +2790,26 @@ function renderKickouts(){
     </div>`;
   renderKoPitchMap();
   renderOppKoPitchMap();
+
+  // ── Mayo KO Winners — Player chart ────────────────────────────────────────
+  const koSorted=Object.entries(MAYO_KO_WON_BY_PLAYER)
+    .sort((a,b)=>b[1]-a[1]);
+  const koLabels=koSorted.map(([n])=>n.split(' ').pop()); // surname only
+  const koVals=koSorted.map(([,v])=>v);
+  mkChart('ko-player-chart',{type:'bar',
+    data:{labels:koLabels,
+      datasets:[{label:'Mayo KOs Won',data:koVals,backgroundColor:GREEN+'CC',borderRadius:5}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{
+          title:ctx=>{
+            // Full name from sorted list
+            return koSorted[ctx[0].dataIndex][0];
+          },
+          label:ctx=>`${ctx.parsed.y} Mayo KOs won`}}},
+      scales:{
+        y:{ticks:{stepSize:2},grid:{color:BORDER},title:{display:true,text:'KOs Won',font:{size:11}}},
+        x:{grid:{display:false},ticks:{font:{size:11}}}}}});
 }
 
 // ── SHOOTING ─────────────────────────────────────────────────────────────────
@@ -4624,20 +4660,29 @@ function renderPlayerDetail(){
     return a+(p.possessions>0?(p.kickpasses+pm.handpasses)/p.possessions*100:0);
   },0)/allNames.length;
 
+  // Mayo KOs won per game
+  const playerMayoKOWon=MAYO_KO_WON_BY_PLAYER[name]||0;
+  const avgMayoKOWon=Object.entries(MAYO_KO_WON_BY_PLAYER).reduce((a,[n,v])=>{
+    const m=RAW.seasonPlayers[n]?RAW.seasonPlayers[n].matches:1;
+    return a+v/m;
+  },0)/Object.keys(MAYO_KO_WON_BY_PLAYER).length;
+
   const stats=[
     {label:'Pts/Game',player:sp.points/sp.matches,avg:avgSeasonPts,max:8},
     {label:'Shots/Game',player:sp.shots/sp.matches,avg:avgSeasonShots,max:8},
     {label:'Tackles/Game',player:sp.tackles/sp.matches,avg:avgSeasonTackles,max:15},
     {label:'Pass Compl %',player:passComp,avg:avgPassComp,max:100},
+    {label:'Mayo KOs Won',player:playerMayoKOWon/sp.matches,avg:avgMayoKOWon,max:5,isInt:true,total:playerMayoKOWon},
   ];
   document.getElementById('pl-vs-avg').innerHTML=stats.map(s=>{
     const pp=Math.min(s.player/s.max*100,100).toFixed(0);
     const ap=Math.min(s.avg/s.max*100,100).toFixed(0);
     const dispVal=s.label==='Pass Compl %'?s.player.toFixed(1)+'%':s.player.toFixed(1);
     const dispAvg=s.label==='Pass Compl %'?s.avg.toFixed(1)+'%':s.avg.toFixed(1);
+    const totalNote=s.total!=null?` <span style="color:var(--muted);font-weight:400;font-size:10px">(${s.total} total)</span>`:'';
     return `<div style="margin-bottom:14px">
       <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;margin-bottom:4px">
-        <span>${s.label}</span><span style="color:var(--green-dark)">${dispVal} <span style="color:var(--muted);font-weight:400">vs avg ${dispAvg}</span></span>
+        <span>${s.label}</span><span style="color:var(--green-dark)">${dispVal}/game${totalNote} <span style="color:var(--muted);font-weight:400">vs avg ${dispAvg}</span></span>
       </div>
       <div style="height:8px;background:var(--border);border-radius:4px;position:relative;overflow:visible">
         <div style="height:100%;width:${pp}%;background:var(--green);border-radius:4px"></div>
