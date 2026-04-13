@@ -1292,22 +1292,22 @@ const KO_PITCH_DATA=[
   [60,90,0,"Rd.7","L","medium"],
   [66,22,1,"Rd.7","L","medium"],
   [64,7,1,"Rd.7","L","medium"],
-  [48,27,0,"long","H","CSFC QF"],
-  [47,15,1,"long","H","CSFC QF"],
-  [52,98,0,"long","H","CSFC QF"],
-  [46,22,1,"long","H","CSFC QF"],
-  [50,25,1,"long","H","CSFC QF"],
-  [49,20,1,"long","H","CSFC QF"],
-  [48,22,1,"long","H","CSFC QF"],
-  [62,90,1,"medium","H","CSFC QF"],
-  [64,42,1,"medium","H","CSFC QF"],
-  [58,15,1,"medium","H","CSFC QF"],
-  [71,21,0,"short","H","CSFC QF"],
-  [65,89,1,"medium","H","CSFC QF"],
-  [65,9,1,"medium","H","CSFC QF"],
-  [64,74,1,"medium","H","CSFC QF"],
-  [67,55,1,"medium","H","CSFC QF"],
-  [60,10,1,"medium","H","CSFC QF"]
+  [48,27,0,"CSFC QF","H","long"],
+  [47,15,1,"CSFC QF","H","long"],
+  [52,98,0,"CSFC QF","H","long"],
+  [46,22,1,"CSFC QF","H","long"],
+  [50,25,1,"CSFC QF","H","long"],
+  [49,20,1,"CSFC QF","H","long"],
+  [48,22,1,"CSFC QF","H","long"],
+  [62,90,1,"CSFC QF","H","medium"],
+  [64,42,1,"CSFC QF","H","medium"],
+  [58,15,1,"CSFC QF","H","medium"],
+  [71,21,0,"CSFC QF","H","short"],
+  [65,89,1,"CSFC QF","H","medium"],
+  [65,9,1,"CSFC QF","H","medium"],
+  [64,74,1,"CSFC QF","H","medium"],
+  [67,55,1,"CSFC QF","H","medium"],
+  [60,10,1,"CSFC QF","H","medium"]
 ];
 
 /// Mayo KO zone scoring: goals, 2-pointers, 1-pointers from immediate possession after each won KO
@@ -1780,7 +1780,23 @@ const OPP_KO_DATA=[
   [48,80,1,"Rd.7","medium",null],[44,57,0,"Rd.7","long",null],[71,89,1,"Rd.7","short",null],
   [61,43,1,"Rd.7","medium",null],[63,37,1,"Rd.7","medium",null],[65,36,1,"Rd.7","medium",null],
   [70,60,1,"Rd.7","short",null],[66,44,1,"Rd.7","medium",null],[70,85,1,"Rd.7","short",null],
-  [57,44,1,"Rd.7","medium",null],[84,6,1,"Rd.7","short",null]
+  [57,44,1,"Rd.7","medium",null],[84,6,1,"Rd.7","short",null],
+  // CSFC QF — London (29)
+  [84,9,1,"CSFC QF","short",null],[69,49,1,"CSFC QF","short",null],
+  [49,59,0,"CSFC QF","long",null],[61,40,1,"CSFC QF","medium",null],
+  [68,54,1,"CSFC QF","short",null],[54,65,0,"CSFC QF","long",null],
+  [57,19,0,"CSFC QF","long",null],[59,5,0,"CSFC QF","medium",null],
+  [57,3,1,"CSFC QF","medium",null],[53,47,1,"CSFC QF","long",null],
+  [50,56,0,"CSFC QF","long",null],[53,20,0,"CSFC QF","long",null],
+  [53,70,0,"CSFC QF","long",null],[53,59,0,"CSFC QF","long",null],
+  [53,75,1,"CSFC QF","long",null],[50,50,1,"CSFC QF","long",null],
+  [72,70,1,"CSFC QF","short",null],[80,10,1,"CSFC QF","short",null],
+  [66,48,1,"CSFC QF","medium",null],[43,63,1,"CSFC QF","long",null],
+  [44,57,1,"CSFC QF","long",null],[44,50,0,"CSFC QF","long",null],
+  [44,61,1,"CSFC QF","long",null],[48,35,1,"CSFC QF","long",null],
+  [46,63,0,"CSFC QF","long",null],[73,18,0,"CSFC QF","short",null],
+  [46,51,0,"CSFC QF","long",null],[41,51,1,"CSFC QF","long",null],
+  [41,66,1,"CSFC QF","long",null]
 ];
 
 const GK_KO_DATA={
@@ -1847,7 +1863,7 @@ const OPP_KO_PERIOD_DATA={
   "Rd.5":[[3,2,1],[2,2,0],[6,3,3],[3,2,1],[1,1,0],[3,3,0]],
   "Rd.6":[[6,3,3],[3,3,0],[3,3,0],[4,3,1],[5,4,1],[6,5,1]],
   "Rd.7":[[3,3,0],[6,4,2],[8,7,1],[7,3,4],[3,3,0],[5,5,0]],
-  "CSFC QF":[[5,1,4],[4,3,1],[7,4,3],[4,0,4],[4,1,3],[5,3,2]],
+  "CSFC QF":[[5,4,1],[4,1,3],[7,3,4],[4,4,0],[4,3,1],[5,2,3]],
 };
 
 // ── Turnover data per 12-min period (extracted from XML) ─────────────────────
@@ -6017,7 +6033,7 @@ function renderOppKoPitchMap(){
       <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
         <span style="font-size:11px;font-weight:700;color:var(--muted)">Round</span>
         <select onchange="document.getElementById('opp-ko-map-wrap')._round=this.value;renderOppKoPitchMap()" style="font-size:12px;padding:4px 10px;font-weight:500;border-radius:8px;border:1px solid var(--border);color:var(--text);background:var(--white);cursor:pointer">
-          ${['All','Rd.1','Rd.2','Rd.3','Rd.4','Rd.5','Rd.6','Rd.7'].map(v=>`<option value="${v}" ${roundF===v?'selected':''}>${v==='All'?'All Games':v}</option>`).join('')}
+          ${['All','Rd.1','Rd.2','Rd.3','Rd.4','Rd.5','Rd.6','Rd.7','CSFC QF'].map(v=>`<option value="${v}" ${roundF===v?'selected':''}>${v==='All'?'All Games':v}</option>`).join('')}
         </select>
       </div>
     </div>
