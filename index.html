@@ -1697,6 +1697,17 @@ const OPP_SHOT_MAP_DATA=[
   [64,30,'play','1pt','Rd.7','pt1Att'],[39,73,'play','miss','Rd.7','pt2Att'],[25,61,'play','miss','Rd.7','goalAtt'],
   [34,37,'play','2pt','Rd.7','pt2Att'],[38,82,'play','miss','Rd.7','pt2Att'],[40,77,'play','miss','Rd.7','pt2Att'],
   [66,60,'play','miss','Rd.7','pt1Att'],[65,72,'play','1pt','Rd.7','pt1Att'],
+  // CSFC QF vs London (19)
+  [50,60,'deadball','1pt','CSFC QF','pt1Att'],[66,69,'play','1pt','CSFC QF','pt1Att'],
+  [65,31,'play','1pt','CSFC QF','pt1Att'],[70,51,'deadball','1pt','CSFC QF','pt1Att'],
+  [73,69,'deadball','1pt','CSFC QF','pt1Att'],[55,33,'play','miss','CSFC QF','pt1Att'],
+  [91,64,'play','miss','CSFC QF','goalAtt'],[78,66,'deadball','1pt','CSFC QF','pt1Att'],
+  [95,54,'play','goal','CSFC QF','goalAtt'],[49,35,'deadball','miss','CSFC QF','pt1Att'],
+  [27,51,'play','miss','CSFC QF','pt2Att'],[45,9,'play','2pt','CSFC QF','pt2Att'],
+  [89,35,'play','1pt','CSFC QF','pt1Att'],[26,20,'deadball','miss','CSFC QF','pt2Att'],
+  [74,26,'play','miss','CSFC QF','pt1Att'],[27,35,'play','miss','CSFC QF','pt2Att'],
+  [23,61,'play','2pt','CSFC QF','pt2Att'],[21,48,'play','2pt','CSFC QF','pt2Att'],
+  [48,12,'play','2pt','CSFC QF','pt2Att'],
 ];
 
 // Opposition Kickout data: [X-KOs_away, Y-KOs_away, opp_won(1=opp/0=mayo), round, length, mayo_score_or_null]
@@ -1816,12 +1827,12 @@ const ROUND_TEMPO=[
 // ── Period Attack Data (all 7 rounds combined) ────────────────────────────────
 // [period_label, total, quick, q_goals, q_pts, medium, m_goals, m_pts, slow, s_goals, s_pts, shot_attacks, no_shot_attacks]
 const PERIOD_ATTACK_DATA=[
-  ['0\u201312',  46, 30, 0, 11, 14, 1, 12,  2, 0,  2, 26, 20],
-  ['12\u201324', 35, 24, 1, 10,  4, 0,  3,  7, 0,  4, 22, 13],
-  ['24\u201335', 46, 31, 0,  7, 11, 0, 10,  4, 1,  5, 27, 19],
-  ['35\u201347', 42, 23, 2, 10, 11, 0,  7,  8, 0,  5, 35,  7],
-  ['47\u201359', 39, 16, 1,  6, 14, 1, 11,  9, 0,  3, 29, 10],
-  ['59\u201370', 48, 38, 1, 10,  4, 0,  4,  6, 0,  5, 27, 21],
+  ['0\u201312',  53, 36, 0, 14, 14, 1, 12,  3, 0,  2, 33, 28],
+  ['12\u201324', 40, 28, 1, 12,  5, 0,  4,  7, 0,  4, 29, 15],
+  ['24\u201335', 54, 35, 0,  9, 14, 0, 12,  5, 1,  5, 36, 21],
+  ['35\u201347', 48, 24, 2, 11, 13, 0,  8, 11, 0,  7, 40, 10],
+  ['47\u201359', 46, 18, 1,  7, 16, 1, 12, 12, 0,  6, 36, 12],
+  ['59\u201370', 54, 41, 1, 12,  5, 0,  5,  8, 0,  7, 32, 24],
 ];
 
 // ── Opposition KO data per 12-min period (extracted from XML) ────────────────
@@ -1835,6 +1846,7 @@ const OPP_KO_PERIOD_DATA={
   "Rd.5":[[3,2,1],[2,2,0],[6,3,3],[3,2,1],[1,1,0],[3,3,0]],
   "Rd.6":[[6,3,3],[3,3,0],[3,3,0],[4,3,1],[5,4,1],[6,5,1]],
   "Rd.7":[[3,3,0],[6,4,2],[8,7,1],[7,3,4],[3,3,0],[5,5,0]],
+  "CSFC QF":[[5,1,4],[4,3,1],[7,4,3],[4,0,4],[4,1,3],[5,3,2]],
 };
 
 // ── Turnover data per 12-min period (extracted from XML) ─────────────────────
@@ -1870,7 +1882,7 @@ const TACKLE_PERIOD_DATA={
   "Rd.5":[13,14,6,4,10,18],
   "Rd.6":[17,19,12,7,7,5],
   "Rd.7":[24,16,6,5,4,10],
-  "CSFC QF":[31,28,15,14,10,8],
+  "CSFC QF":[27,21,11,14,11,5],
 };
 
 // ── Per-player tackle counts per round (from MAYO TACKLE XML events) ──────────
@@ -1882,7 +1894,7 @@ const TACKLE_COUNTS_PER_PLAYER={
   "Rd.5":{"David McBrien":9,"Jordan Flynn":6,"Enda Hession":5,"Aidan O'Shea":5,"Sam Callinan":4,"Paddy Durcan":4,"Paul Towey":3,"Ryan O'Donoghue":3,"Conor Loftus":2,"Seán Morahan":2,"Stephen Coen":2,"Bob Tuohy":2,"Cian McHale":1,"Kobe McDonald":1,"Jack Carney":1,"Rory Brickenden":1},
   "Rd.6":{"Ryan O'Donoghue":9,"Kobe McDonald":7,"Jack Coyne":6,"Rory Brickenden":6,"Sam Callinan":4,"Jordan Flynn":4,"Conal Dawson":3,"David McBrien":3,"Diarmuid O'Connor":3,"Jack Carney":3,"Darragh Beirne":3,"Seán Morahan":3,"Fergal Boland":2,"Bob Tuohy":2,"Donnacha McHugh":2,"Diarmuid Duffy":2,"Stephen Coen":1,"Aidan O'Shea":1,"Cillian O'Connor":1},
   "Rd.7":{"David McBrien":8,"Jack Carney":7,"Michael Plunkett":6,"Sam Callinan":6,"Jack Coyne":6,"Seamus Howard":6,"Diarmuid Duffy":5,"Paul Towey":4,"Ryan O'Donoghue":3,"John MacMonagle":3,"Rory Brickenden":2,"Aidan O'Shea":2,"Jordan Flynn":2,"Cian McHale":2,"Cillian O'Connor":2,"Hugh O'Loughlin":1},
-  "CSFC QF":{"Jack Carney":5,"Sam Callinan":5,"Michael Plunkett":4,"Aidan O'Shea":3,"Ryan O'Donoghue":2,"Paddy Durcan":2,"David McBrien":2,"Paul Towey":2,"Hugh O'Loughlin":2,"Bob Tuohy":2,"Cian McHale":1,"Rory Brickenden":1,"Fenton Kelly":1,"Jordan Flynn":1},
+  "CSFC QF":{"Sam Callinan":15,"Michael Plunkett":10,"Jack Carney":8,"Aidan O'Shea":8,"David McBrien":8,"Paul Towey":7,"Fenton Kelly":6,"Ryan O'Donoghue":5,"Paddy Durcan":5,"Hugh O'Loughlin":5,"Bob Tuohy":4,"Jordan Flynn":4,"Rory Brickenden":3,"Cian McHale":1},
 };
 
 // ── KO wins per player — from 'Kickout Won' label, timestamp-matched to KO events ──
@@ -2511,6 +2523,82 @@ const MOMENTUM_EVENTS = {
       { time: 4711.023588653124, code: "MAYO TOs" },
       { time: 4776.233588653124, code: "MAYO TOs" }
     ]
+  },
+  "CSFC QF": {
+    halfTimeStart: 2212.489,
+    halfTimeEnd: 2239.505,
+    events: [
+      { time: 59.904344444444, code: "LONDON TOs" },
+      { time: 67.034344444444, code: "MAYO TOs" },
+      { time: 153.094344444445, code: "MAYO TOs" },
+      { time: 175.584344444444, code: "LONDON TOs" },
+      { time: 194.774344444444, code: "MAYO TOs" },
+      { time: 204.904344444444, code: "LONDON TOs" },
+      { time: 231.052477777778, code: "MAYO TOs" },
+      { time: 254.468665040998, code: "LONDON TOs" },
+      { time: 338.814344444444, code: "LONDON TOs" },
+      { time: 341.844344444445, code: "MAYO TOs" },
+      { time: 416.924344444444, code: "LONDON TOs" },
+      { time: 432.204344444444, code: "MAYO TOs" },
+      { time: 439.764344444445, code: "LONDON TOs" },
+      { time: 448.272112652667, code: "MAYO WIDE" },
+      { time: 489.773643305665, code: "MAYO WIDE" },
+      { time: 527.854344444444, code: "LONDON TOs" },
+      { time: 549.024611111111, code: "MAYO WIDE" },
+      { time: 645.754344444444, code: "LONDON TOs" },
+      { time: 706.414344444444, code: "LONDON TOs" },
+      { time: 709.014344444444, code: "MAYO TOs" },
+      { time: 755.084344444444, code: "MAYO TOs" },
+      { time: 893.734344444444, code: "LONDON TOs" },
+      { time: 986.724344444444, code: "LONDON TOs" },
+      { time: 1041.224344444444, code: "LONDON TOs" },
+      { time: 1052.924344444444, code: "MAYO TOs" },
+      { time: 1083.594344444444, code: "LONDON TOs" },
+      { time: 1105.374033333333, code: "MAYO WIDE" },
+      { time: 1186.894344444444, code: "MAYO TOs" },
+      { time: 1349.698022222222, code: "MAYO WIDE" },
+      { time: 1504.744088888888, code: "LONDON WIDE" },
+      { time: 1524.255488888889, code: "MAYO WIDE" },
+      { time: 1583.654344444444, code: "LONDON TOs" },
+      { time: 1641.524888888889, code: "MAYO WIDE" },
+      { time: 1689.76300583233, code: "LONDON TOs" },
+      { time: 1708.979011111111, code: "MAYO WIDE" },
+      { time: 1733.324344444444, code: "LONDON TOs" },
+      { time: 1743.834344444444, code: "MAYO TOs" },
+      { time: 1755.173737888663, code: "LONDON BLOCKED" },
+      { time: 1757.810211111111, code: "LONDON TOs" },
+      { time: 1764.043611111111, code: "MAYO TOs" },
+      { time: 1859.544344444444, code: "LONDON TOs" },
+      { time: 2002.684344444445, code: "LONDON TOs" },
+      { time: 2065.569594096664, code: "LONDON TOs" },
+      { time: 2084.001944444445, code: "MAYO BLOCKED" },
+      { time: 2160.654344444444, code: "LONDON TOs" },
+      { time: 2191.365988888889, code: "MAYO WIDE" },
+      { time: 2275.974922222221, code: "MAYO TOs" },
+      { time: 2409.814922222221, code: "LONDON TOs" },
+      { time: 2559.487977777777, code: "LONDON WIDE" },
+      { time: 2661.814533333334, code: "LONDON WIDE" },
+      { time: 2713.387122222222, code: "MAYO TOs" },
+      { time: 2733.445655555555, code: "LONDON TOs" },
+      { time: 2957.424922222222, code: "MAYO TOs" },
+      { time: 3009.880711111111, code: "MAYO WIDE" },
+      { time: 3185.794922222221, code: "LONDON TOs" },
+      { time: 3230.014922222221, code: "MAYO TOs" },
+      { time: 3249.394922222221, code: "LONDON TOs" },
+      { time: 3299.954922222221, code: "MAYO TOs" },
+      { time: 3311.154922222222, code: "LONDON TOs" },
+      { time: 3377.994922222221, code: "LONDON TOs" },
+      { time: 3552.604922222221, code: "LONDON TOs" },
+      { time: 3664.904922222222, code: "LONDON TOs" },
+      { time: 3784.334922222221, code: "LONDON TOs" },
+      { time: 3788.584922222221, code: "MAYO TOs" },
+      { time: 3828.486722222222, code: "LONDON WIDE" },
+      { time: 3932.034922222222, code: "LONDON TOs" },
+      { time: 3971.234922222221, code: "LONDON TOs" },
+      { time: 4185.474922222221, code: "LONDON TOs" },
+      { time: 4206.03492222222, code: "MAYO TOs" },
+      { time: 4318.27492222222, code: "MAYO TOs" }
+    ]
   }
 };
 
@@ -2543,6 +2631,10 @@ const SHOT_PERIOD_DATA={
   "Rd.7":{
     mayo:{total:[6,9,9,9,3,6],scored:[2,6,6,6,3,5],pt1Att:[2,4,4,8,3,5],pt1:[2,4,3,6,3,4],pt2Att:[2,1,2,0,0,1],pt2:[0,0,1,0,0,1],goalAtt:[2,4,3,1,0,0],goal:[0,2,2,0,0,0]},
     opp:{total:[4,2,4,3,5,8],scored:[2,1,3,1,2,3]}
+  },
+  "CSFC QF":{
+    mayo:{total:[7,7,9,5,7,5],scored:[3,3,4,4,5,5],pt1Att:[2,1,3,5,6,4],pt1:[1,0,2,4,4,4],pt2Att:[5,6,5,0,0,0],pt2:[2,3,2,0,0,0],goalAtt:[0,0,1,0,1,1],goal:[0,0,0,0,0,0]},
+    opp:{total:[3,3,2,5,2,4],scored:[3,2,1,3,0,3]}
   }
 };
 
