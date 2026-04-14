@@ -4926,7 +4926,7 @@ function renderPlayerDetail(){
   const shotAsstMeta=PLAYER_SHOT_ASSIST_META[name]||{goalAtt:0,pt2Att:0,pt1Att:0,total:0};
   document.getElementById('pl-kpis').innerHTML=[
     kpiCard({label:'Total Points',value:sp.points,unit:'int',bench:sp.goals+'G + '+sp.pts1+'×1pt + '+(sp.pts2||0)+'×2pt'}),
-    kpiCard({label:'Matches Played',value:sp.matches,unit:'int',bench:'Out of 7 rounds'}),
+    kpiCard({label:'Matches Played',value:sp.matches,unit:'int',bench:'Out of '+RAW.matches.length+' games'}),
     kpiCard({label:'Avg Pts/Game',value:avgPts,unit:'',bench:'Season scoring rate'}),
     kpiCard({label:'Total Shots',value:sp.shots,unit:'int',bench:shotConv+'% shot conversion'}),
     kpiCard({label:'Total Tackles',value:sp.tackles,unit:'int',bench:'Defensive work rate'}),
