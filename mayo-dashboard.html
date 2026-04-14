@@ -2798,7 +2798,7 @@ function renderOverview(){
     kpiCard({label:'Avg Score',value:+avgMayoScore.toFixed(1),unit:'pts',bench:'Opp avg: '+avgOppScore.toFixed(1)+' pts'}),
     kpiCard({label:'Avg Score Margin',value:avgMargin.toFixed(1),unit:'pts',bench:avgMargin>0?'Positive season avg':'Negative avg'}),
     kpiCard({label:'Opp Shot Acc',value:+oppAvgAcc.toFixed(1),unit:'pct',bench:'Defensive concession rate',benchDir:'lower'}),
-    kpiCard({label:'Record',value:wins+'-'+(ms.length-wins),unit:'',bench:ms.length+' rounds played'}),
+    kpiCard({label:'Record',value:wins+'-'+(ms.length-wins),unit:'',bench:ms.length+' games played'}),
   ].join('');
 
   const labels=ms.map(m=>m.round);
