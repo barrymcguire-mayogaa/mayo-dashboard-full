@@ -3927,15 +3927,16 @@ function renderAttackingTop3(){
   if(!wrap._rdFilter) wrap._rdFilter='All';
   const active=wrap._rdFilter;
 
-  const allRounds=['Rd.1','Rd.2','Rd.3','Rd.4','Rd.5','Rd.6','Rd.7'];
-  const oppNames={  'Rd.1':'v Galway','Rd.2':'v Dublin','Rd.3':'v Donegal',
-    'Rd.4':'v Monaghan','Rd.5':'v Armagh','Rd.6':'v Kerry','Rd.7':'v Roscommon'};
+  const allRounds=['Rd.1','Rd.2','Rd.3','Rd.4','Rd.5','Rd.6','Rd.7','CSFC QF'];
+  const oppNames={'Rd.1':'v Galway','Rd.2':'v Dublin','Rd.3':'v Donegal',
+    'Rd.4':'v Monaghan','Rd.5':'v Armagh','Rd.6':'v Kerry','Rd.7':'v Roscommon',
+    'CSFC QF':'v London'};
 
-  // Filter buttons: All + each round
-  const btnStyle=(key)=>`padding:5px 12px;border-radius:20px;border:1.5px solid ${active===key?'var(--green)':'var(--border)'};background:${active===key?'var(--green)':'#fff'};color:${active===key?'#fff':'var(--text)'};font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap`;
-  filterWrap.innerHTML=
-    `<button onclick="document.getElementById('at-top3')._rdFilter='All';renderAttackingTop3()" style="${btnStyle('All')}">All Rounds</button>`+
-    allRounds.map(rd=>`<button onclick="document.getElementById('at-top3')._rdFilter='${rd}';renderAttackingTop3()" style="${btnStyle(rd)}">${rd} ${oppNames[rd]}</button>`).join('');
+  // Dropdown selector
+  filterWrap.innerHTML=`<select onchange="document.getElementById('at-top3')._rdFilter=this.value;renderAttackingTop3()" style="font-size:12px;padding:4px 10px;border-radius:6px;border:1.5px solid var(--border);background:#fff;color:var(--text);font-weight:600;cursor:pointer">
+    <option value="All" ${active==='All'?'selected':''}>All Games</option>
+    ${allRounds.map(rd=>`<option value="${rd}" ${active===rd?'selected':''}>${rd} ${oppNames[rd]}</option>`).join('')}
+  </select>`;
 
   // Aggregate attacks + shots + scores per player for chosen round(s)
   const rounds=active==='All'?allRounds:[active];
