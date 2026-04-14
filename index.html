@@ -800,7 +800,7 @@ tr:hover td{background:#f9fafb}
       <div class="card grid-1" style="margin-top:16px">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:4px">
           <div class="card-title" style="margin:0">Performance Spider — Offensive &amp; Defensive Profile</div>
-          <span style="font-size:11px;color:var(--muted);font-weight:600">Normalised vs squad peak · All 7 rounds</span>
+          <span id="pl-spider-subtitle" style="font-size:11px;color:var(--muted);font-weight:600">Normalised vs squad peak · All 7 rounds</span>
         </div>
         <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start">
           <div style="flex:1;min-width:280px">
@@ -5153,6 +5153,7 @@ function renderPlayerDetail(){
     'Tackle Effectiveness','Defensive Pressure','Ball-Winning','Aerial/Contest'
   ];
 
+  document.getElementById('pl-spider-subtitle').textContent='Normalised vs squad peak · All '+RAW.matches.length+' games';
   mkChart('pl-spider-chart',{type:'radar',data:{
     labels:spiderLabels,
     datasets:[{
