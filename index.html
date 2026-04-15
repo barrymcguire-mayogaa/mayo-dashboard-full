@@ -4716,7 +4716,7 @@ function renderMomentumTimeline(){
 
   if(allRounds){
     // ── ALL ROUNDS MODE ──
-    document.getElementById('mom-match-label').textContent='Season Overview — All 7 Rounds';
+    document.getElementById('mom-match-label').textContent='Season Overview — All '+RAW.matches.length+' Matches';
     document.getElementById('mom-bbc-wrap').style.display='none';
     document.getElementById('mom-shot-momentum-wrap').style.display='none';
 
@@ -5475,11 +5475,18 @@ function renderTeamSheets(){
   renderPitch(tsCurrentRound);
 
   // Season KPIs
+  const topAssistEntry=Object.entries(PLAYER_SCORE_ASSIST_DETAIL).sort((a,b)=>b[1].total-a[1].total)[0];
+  const topAssistName=topAssistEntry[0].split(' ').pop();
+  const topAssistCount=topAssistEntry[1].total;
+  const seasonPts=RAW.matches.reduce((a,m)=>a+m.mayoTotal,0);
+  const playersUsed=(function(){const s=new Set();Object.values(LINEUPS).forEach(rd=>{Object.values(rd.lines).flat().forEach(p=>s.add(p.name));(rd.subs||[]).forEach(sub=>s.add(sub.replace(/^\d+\.\s*/,'')));});return s.size;})();
   document.getElementById('ts-kpis').innerHTML=[
-    kpiCard({label:'Players Used',value:(function(){const s=new Set();Object.values(LINEUPS).forEach(rd=>{Object.values(rd.lines).flat().forEach(p=>s.add(p.name));(rd.subs||[]).forEach(sub=>s.add(sub.replace(/^\d+\.\s*/,'')));});return s.size;})(),unit:'int',bench:'Unique players across all 7 rounds'}),
     kpiCard({label:'Top Scorer',value:players[0][0].split(' ').pop(),unit:'',bench:players[0][1].points+' pts this season'}),
-    kpiCard({label:'Season Goals',value:players.reduce((a,[,p])=>a+p.goals,0),unit:'int',bench:'All 7 rounds combined'}),
+    kpiCard({label:'Top Assister',value:topAssistName,unit:'',bench:topAssistCount+' score assists'}),
     kpiCard({label:'Top Tackler',value:Object.entries(sp).sort((a,b)=>b[1].tackles-a[1].tackles)[0][0].split(' ').pop(),unit:'',bench:Object.entries(sp).sort((a,b)=>b[1].tackles-a[1].tackles)[0][1].tackles+' tackles'}),
+    kpiCard({label:'Season Goals',value:players.reduce((a,[,p])=>a+p.goals,0),unit:'int',bench:'All Matches'}),
+    kpiCard({label:'Season Points',value:seasonPts,unit:'int',bench:'All Matches'}),
+    kpiCard({label:'Players Used',value:playersUsed,unit:'int',bench:'All Matches'}),
   ].join('');
 
   const top10=players.slice(0,10);
