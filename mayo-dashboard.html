@@ -5559,7 +5559,7 @@ function renderTeamSheets(){
     <td>${p.goals}</td><td>${p.pts1}</td><td>${p.pts2||0}</td>
     <td><strong>${p.points}</strong></td>
     <td>${p.shots}</td>
-    <td>${p.shots>0?(p.points/p.shots*100).toFixed(0)+'%':'-'}</td>
+    <td>${p.shots>0?((p.goals+(p.pts1||0)+(p.pts2||0))/p.shots*100).toFixed(0)+'%':'-'}</td>
     <td>${p.tackles}</td>
     <td>${(()=>{const pm2=PLAYER_PASS_META[name]||{hp_made:0,hp_lost:0,kp_made:0,kp_lost:0};const att2=pm2.hp_made+pm2.hp_lost+pm2.kp_made+pm2.kp_lost;return att2>0?((pm2.hp_made+pm2.kp_made)/att2*100).toFixed(0)+'%':'-';})()}</td>
     <td>${p.possessions}</td>
