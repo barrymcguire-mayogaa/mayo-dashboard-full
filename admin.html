@@ -185,6 +185,22 @@ code{background:var(--card);border:1px solid var(--border);border-radius:4px;pad
         <input type="text" id="awayTeam" placeholder="e.g. Galway">
       </div>
       <div class="field">
+        <label>Home Jersey Colour</label>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="color" id="homeColor" value="#0B2447" style="width:42px;height:36px;padding:2px;border-radius:6px;border:1px solid var(--border);background:var(--card);cursor:pointer;">
+          <input type="text" id="homeColorHex" value="#0B2447" placeholder="#0B2447" style="flex:1;" oninput="syncColor('home',this.value)">
+        </div>
+        <div class="help">Main jersey colour used on timeline and badges</div>
+      </div>
+      <div class="field">
+        <label>Away Jersey Colour</label>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="color" id="awayColor" value="#22C55E" style="width:42px;height:36px;padding:2px;border-radius:6px;border:1px solid var(--border);background:var(--card);cursor:pointer;">
+          <input type="text" id="awayColorHex" value="#22C55E" placeholder="#22C55E" style="flex:1;" oninput="syncColor('away',this.value)">
+        </div>
+        <div class="help">Main jersey colour used on timeline and badges</div>
+      </div>
+      <div class="field">
         <label>Competition</label>
         <select class="finput" id="competition">
           <option value="">Select competition</option>
@@ -310,6 +326,26 @@ const auth = sessionStorage.getItem('cohesion_auth');
 if(!auth) window.location.href = 'index.html';
 if(auth !== 'admin') window.location.href = 'library.html';
 function logout(){ sessionStorage.clear(); window.location.href = 'index.html'; }
+
+function syncColor(side, hex){
+  const clean = hex.trim();
+  if(/^#[0-9a-fA-F]{6}$/.test(clean)){
+    document.getElementById(side+'Color').value = clean;
+    document.getElementById(side+'ColorHex').style.borderColor = '';
+  } else {
+    document.getElementById(side+'ColorHex').style.borderColor = '#f44336';
+  }
+}
+// Sync colour picker → hex text field
+document.addEventListener('DOMContentLoaded', () => {
+  ['home','away'].forEach(side => {
+    const picker = document.getElementById(side+'Color');
+    const hex = document.getElementById(side+'ColorHex');
+    if(picker && hex){
+      picker.addEventListener('input', () => { hex.value = picker.value; });
+    }
+  });
+});
 
 // ── Theme ─────────────────────────────────────────────────────
 function initTheme(){
@@ -568,6 +604,8 @@ async function processGame(){
       round,
       homeTeam,
       awayTeam,
+      homeColor: document.getElementById('homeColor').value,
+      awayColor: document.getElementById('awayColor').value,
       youtubeId: ytId,
       half1Start: half1Video,
       half2Start: half2Video,
