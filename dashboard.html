@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COHESION — Match Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;600;700;800;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+[data-theme="dark"]{
+  --bg:#181820;--panel:#1e1e28;--card:#252530;--hover:#2c2c3a;
+  --border:rgba(255,255,255,0.08);--t1:#f0f0f5;--t2:#8888a0;--t3:#52526a;
+  --accent:#4fc3f7;--accent-bg:rgba(79,195,247,0.12);
+  --gold:#ffd700;--shadow:rgba(0,0,0,0.4);
+  --score-bg:rgba(255,215,0,0.12);--won-bg:rgba(76,175,80,0.12);--lost-bg:rgba(244,67,54,0.12);
+}
+[data-theme="light"]{
+  --bg:#f0eeeb;--panel:#ffffff;--card:#f7f6f3;--hover:#ebe9e5;
+  --border:rgba(0,0,0,0.1);--t1:#1a1a28;--t2:#555572;--t3:#888899;
+  --accent:#0369a1;--accent-bg:rgba(3,105,161,0.08);
+  --gold:#b45309;--shadow:rgba(0,0,0,0.12);
+  --score-bg:rgba(180,83,9,0.1);--won-bg:rgba(21,128,61,0.1);--lost-bg:rgba(185,28,28,0.1);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--t1);display:flex;flex-direction:column;transition:background .2s,color .2s;}
+
+/* ── HEADER ── */
+header{
+  height:52px;background:var(--panel);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 16px;gap:12px;flex-shrink:0;z-index:50;
+}
+.back-btn{
+  display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:6px;
+  font:700 11px 'Barlow Condensed',sans-serif;letter-spacing:.5px;
+  color:var(--t2);border:1px solid var(--border);background:var(--card);
+  text-decoration:none;cursor:pointer;transition:all .15s;flex-shrink:0;
+}
+.back-btn:hover{border-color:var(--accent);color:var(--accent);}
+.game-title{
+  font:700 14px 'Barlow Condensed',sans-serif;letter-spacing:.5px;
+  color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  flex:1;
+}
+.game-title strong{color:var(--t1);}
+.hdr-actions{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.hdr-btn{
+  display:flex;align-items:center;justify-content:center;gap:4px;
+  padding:5px 10px;border-radius:6px;
+  font:700 11px 'Barlow Condensed',sans-serif;letter-spacing:.5px;
+  color:var(--t2);border:1px solid var(--border);background:var(--card);
+  cursor:pointer;transition:all .15s;white-space:nowrap;
+}
+.hdr-btn:hover{border-color:var(--accent);color:var(--accent);}
+.hdr-btn.round{width:34px;height:34px;padding:0;border-radius:50%;font-size:15px;}
+
+/* ── MAIN LAYOUT ── */
+main{flex:1;display:grid;grid-template-columns:320px 1fr;overflow:hidden;}
+
+/* ── LEFT: EVENTS PANEL ── */
+.events-panel{display:flex;flex-direction:column;overflow:hidden;border-right:1px solid var(--border);}
+
+/* CONTROLS */
+.controls{padding:10px 12px 7px;background:var(--panel);border-bottom:1px solid var(--border);flex-shrink:0;}
+.search-row{position:relative;margin-bottom:7px;}
+.search-row input{
+  width:100%;background:var(--card);border:1px solid var(--border);
+  border-radius:7px;padding:7px 10px 7px 30px;
+  color:var(--t1);font:13px 'Barlow',sans-serif;outline:none;transition:border-color .2s;
+}
+.search-row input:focus{border-color:var(--accent);}
+.search-row input::placeholder{color:var(--t3);}
+.si{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--t3);font-size:12px;pointer-events:none;}
+.filters-row{display:flex;gap:4px;margin-bottom:7px;}
+select{
+  flex:1;background:var(--card);border:1px solid var(--border);border-radius:6px;
+  padding:4px 6px;color:var(--t1);font:11px 'Barlow',sans-serif;
+  outline:none;cursor:pointer;
+}
+select:focus{border-color:var(--accent);}
+select option{background:var(--card);}
+
+/* Chip rows */
+.chips-row{display:flex;gap:3px;flex-wrap:wrap;margin-bottom:4px;}
+.chip{
+  padding:3px 8px;border-radius:20px;
+  font:600 10px 'Barlow Condensed',sans-serif;letter-spacing:.5px;
+  cursor:pointer;border:1px solid var(--border);background:var(--card);color:var(--t2);
+  transition:all .12s;white-space:nowrap;
+}
+.chip:hover:not(.on){border-color:var(--t2);}
+.chip.on{color:#fff;}
+/* Row 1 */
+.chip[data-c="All"].on{background:#4fc3f7;border-color:#4fc3f7;}
+[data-theme="light"] .chip[data-c="All"].on{color:#fff;}
+.chip[data-c="Shots & Scores"].on{background:#ffd700;border-color:#ffd700;color:#000;}
+.chip[data-c="Kickouts"].on{background:#ab47bc;border-color:#ab47bc;}
+.chip[data-c="Fouls"].on{background:#f44336;border-color:#f44336;}
+.chip[data-c="Turnovers"].on{background:#ff7043;border-color:#ff7043;}
+.chip[data-c="Tackles"].on{background:#26a69a;border-color:#26a69a;}
+.chip[data-c="Possession & Attack"].on{background:#42a5f5;border-color:#42a5f5;}
+.chip[data-c="Player Actions"].on{background:#66bb6a;border-color:#66bb6a;}
+/* Row 2 */
+.chip[data-e].on{background:var(--accent);border-color:var(--accent);color:#fff;}
+[data-theme="light"] .chip[data-e].on{color:#fff;}
+
+.statbar{display:flex;gap:5px;}
+.sp{background:var(--card);border-radius:4px;padding:2px 7px;font-size:10px;color:var(--t2);}
+.sp b{color:var(--t1);}
+
+/* EVENT LIST */
+.event-list{flex:1;overflow-y:auto;}
+.hdiv{
+  padding:3px 12px;background:var(--panel);border-bottom:1px solid var(--border);
+  font:700 9px 'Barlow Condensed',sans-serif;letter-spacing:3px;color:var(--t3);
+  text-transform:uppercase;position:sticky;top:0;z-index:5;
+}
+.erow{
+  display:grid;grid-template-columns:54px 1fr auto;align-items:center;
+  padding:7px 11px;border-bottom:1px solid var(--border);
+  cursor:pointer;gap:8px;transition:background .1s;
+}
+.erow:hover{background:var(--card);}
+.erow.on{background:var(--card);border-left:3px solid var(--accent);padding-left:8px;}
+.etime{text-align:center;}
+.egame{font:700 12px 'Barlow Condensed',sans-serif;color:var(--accent);line-height:1.1;}
+.evid{font-size:10px;color:var(--t3);}
+.ebody{min-width:0;}
+.ecode{font:700 12px 'Barlow Condensed',sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.emeta{font-size:10px;color:var(--t2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ebadges{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0;}
+.b{font:700 9px 'Barlow Condensed',sans-serif;padding:2px 5px;border-radius:3px;white-space:nowrap;}
+.b-mayo{background:rgba(0,103,71,.2);color:#4caf50;border:1px solid rgba(0,103,71,.4);}
+.b-london{background:rgba(0,48,135,.2);color:#64b5f6;border:1px solid rgba(0,48,135,.4);}
+.b-score{background:var(--score-bg);color:var(--gold);border:1px solid rgba(180,83,9,.3);}
+.b-won{background:var(--won-bg);color:#4caf50;border:1px solid rgba(76,175,80,.3);}
+.b-lost{background:var(--lost-bg);color:#ef9a9a;border:1px solid rgba(244,67,54,.3);}
+.b-mid{background:rgba(255,193,7,.1);color:#ffc107;border:1px solid rgba(255,193,7,.3);}
+[data-theme="light"] .b-score{color:#b45309;}
+[data-theme="light"] .b-won{color:#15803d;}
+[data-theme="light"] .b-lost{color:#b91c1c;}
+.empty{padding:32px 16px;text-align:center;color:var(--t3);font-size:12px;}
+
+/* ── RIGHT: VIDEO PANEL ── */
+.video-panel{display:flex;flex-direction:column;overflow:hidden;background:var(--panel);}
+
+/* VIDEO TOOLBAR */
+.vid-toolbar{
+  display:flex;align-items:center;padding:6px 10px;gap:5px;
+  border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;
+}
+.size-grp{display:flex;gap:3px;}
+.sbtn{
+  padding:3px 9px;border-radius:5px;
+  font:700 11px 'Barlow Condensed',sans-serif;letter-spacing:.5px;
+  cursor:pointer;border:1px solid var(--border);background:var(--card);color:var(--t2);
+  transition:all .12s;
+}
+.sbtn:hover{border-color:var(--accent);color:var(--accent);}
+.sbtn.on{background:var(--accent);border-color:var(--accent);color:#fff;}
+[data-theme="light"] .sbtn.on{color:#fff;}
+.v-spacer{flex:1;}
+.tbtn{
+  display:flex;align-items:center;gap:4px;padding:5px 10px;border-radius:6px;
+  font:700 11px 'Barlow Condensed',sans-serif;letter-spacing:.5px;
+  cursor:pointer;transition:all .12s;text-decoration:none;white-space:nowrap;border:none;
+}
+.tbtn-fs{background:var(--card);border:1px solid var(--border);color:var(--t2);}
+.tbtn-fs:hover{border-color:var(--accent);color:var(--accent);}
+.tbtn-yt{background:#ff0000;color:#fff;}
+.tbtn-yt:hover{background:#cc0000;}
+
+/* VIDEO */
+.vid-wrap{flex-shrink:0;background:#000;overflow:hidden;}
+.vid-wrap iframe{display:block;width:100%;height:100%;border:none;}
+
+/* NOW PLAYING */
+.now-playing{padding:8px 12px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.np-label{font-size:9px;letter-spacing:2px;color:var(--t3);text-transform:uppercase;margin-bottom:2px;}
+.np-name{font:800 15px 'Barlow Condensed',sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.np-meta{font-size:11px;color:var(--t2);margin-top:1px;}
+.np-time{font:700 11px 'Barlow Condensed',sans-serif;color:var(--accent);margin-top:2px;}
+
+/* NEARBY */
+.nearby{flex:1;overflow-y:auto;padding:6px 8px;}
+.nb-label{font-size:9px;letter-spacing:2px;color:var(--t3);text-transform:uppercase;padding:2px 4px 5px;}
+.nbrow{
+  display:flex;align-items:center;gap:7px;padding:6px 8px;border-radius:6px;
+  cursor:pointer;margin-bottom:2px;border:1px solid transparent;transition:background .1s;
+}
+.nbrow:hover{background:var(--hover);border-color:var(--border);}
+.nbrow.on{background:var(--hover);border-color:var(--accent-bg);}
+.nb-time{font:700 11px 'Barlow Condensed',sans-serif;color:var(--accent);min-width:60px;}
+.nb-code{font-size:11px;color:var(--t2);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.nb-badge{font:700 9px 'Barlow Condensed',sans-serif;padding:1px 5px;border-radius:3px;}
+
+/* IDLE */
+.idle{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;gap:8px;}
+.idle-icon{font-size:28px;opacity:.2;}
+.idle-text{font-size:11px;color:var(--t3);line-height:1.9;}
+.idle-text strong{color:var(--t2);}
+
+/* LOADING */
+.loading-overlay{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--t3);}
+.spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ── MOBILE ── */
+@media(max-width:767px){
+  main{grid-template-columns:1fr;grid-template-rows:auto 1fr;overflow:hidden;}
+  .video-panel{position:sticky;top:52px;z-index:40;max-height:60vw;flex-direction:column;overflow:visible;}
+  .vid-wrap iframe{display:block;}
+  .now-playing,.nearby,.idle{display:none;}
+  .events-panel{border-right:none;border-top:1px solid var(--border);}
+  .vid-toolbar{padding:5px 8px;}
+  .hdr-btn:not(.round){display:none;}
+  .game-title{font-size:12px;}
+}
+
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+</style>
+</head>
+<body>
+
+<header>
+  <a href="library.html" class="back-btn">← Library</a>
+  <div class="game-title" id="gameTitle">Loading…</div>
+  <div class="hdr-actions">
+    <div class="hdr-btn round" onclick="toggleTheme()" id="themeToggle">☀️</div>
+    <div class="hdr-btn" onclick="logout()" style="font-size:11px;">Sign Out</div>
+  </div>
+</header>
+
+<main id="mainArea">
+  <!-- Loading state -->
+  <div style="grid-column:1/-1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:var(--t3);">
+    <div class="spinner"></div>
+    Loading match data…
+  </div>
+</main>
+
+<script>
+// ── Auth & Theme ──────────────────────────────────────────────
+const auth = sessionStorage.getItem('cohesion_auth');
+if(!auth) window.location.href = 'index.html';
+function logout(){ sessionStorage.clear(); window.location.href = 'index.html'; }
+function initTheme(){
+  const t = localStorage.getItem('cohesion_theme')||'dark';
+  document.documentElement.setAttribute('data-theme',t);
+  document.getElementById('themeToggle').textContent = t==='dark'?'☀️':'🌙';
+}
+function toggleTheme(){
+  const c = document.documentElement.getAttribute('data-theme');
+  const n = c==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',n);
+  localStorage.setItem('cohesion_theme',n);
+  document.getElementById('themeToggle').textContent = n==='dark'?'☀️':'🌙';
+}
+initTheme();
+
+// ── State ─────────────────────────────────────────────────────
+let ALL=[], GAME={}, filtered=[];
+let activeCat='All', activeEvent='', activeId=null, curT=103;
+
+const gameId = new URLSearchParams(window.location.search).get('game');
+if(!gameId){ window.location.href='library.html'; }
+
+// ── Load Data ─────────────────────────────────────────────────
+async function loadGame(){
+  try{
+    const [gRes, eRes] = await Promise.all([
+      fetch('games/games.json'),
+      fetch(`games/${gameId}.json`)
+    ]);
+    const gData = await gRes.json();
+    GAME = gData.games.find(g=>g.id===gameId) || {};
+    ALL  = await eRes.json();
+    initDashboard();
+  } catch(e){
+    document.getElementById('mainArea').innerHTML =
+      `<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--t3);">
+        <div style="font-size:18px;color:var(--t2);margin-bottom:8px;">Could not load match data</div>
+        <div style="font-size:13px;">Make sure this page is served from GitHub Pages, not a local file.</div>
+       </div>`;
+  }
+}
+
+// ── Init Dashboard ────────────────────────────────────────────
+function initDashboard(){
+  document.getElementById('gameTitle').innerHTML =
+    `<strong>${GAME.homeTeam||'Home'} v ${GAME.awayTeam||'Away'}</strong> · ${GAME.competition||''} ${GAME.round||''}`;
+  document.title = `COHESION — ${GAME.homeTeam} v ${GAME.awayTeam}`;
+
+  document.getElementById('mainArea').innerHTML = buildMainHTML();
+  populatePlayers();
+  applyFilters();
+  initSizes();
+}
+
+function buildMainHTML(){
+  return `
+  <!-- EVENTS PANEL -->
+  <div class="events-panel">
+    <div class="controls">
+      <div class="search-row">
+        <span class="si">🔍</span>
+        <input id="srch" type="text" placeholder="Search events, players…" oninput="applyFilters()">
+      </div>
+      <div class="filters-row">
+        <select id="fTeam" onchange="applyFilters()">
+          <option value="">All Teams</option>
+          <option value="${GAME.homeTeam}">${GAME.homeTeam}</option>
+          <option value="${GAME.awayTeam}">${GAME.awayTeam}</option>
+        </select>
+        <select id="fPlayer" onchange="applyFilters()"><option value="">All Players</option></select>
+        <select id="fHalf" onchange="applyFilters()">
+          <option value="">All Periods</option>
+          <option value="1st Half">1st Half</option>
+          <option value="2nd Half">2nd Half</option>
+        </select>
+      </div>
+      <!-- ROW 1: broad categories -->
+      <div class="chips-row" id="catChips">
+        <div class="chip on" data-c="All" onclick="setCat('All')">All</div>
+        <div class="chip" data-c="Shots & Scores" onclick="setCat('Shots & Scores')">Shots</div>
+        <div class="chip" data-c="Kickouts" onclick="setCat('Kickouts')">KOs</div>
+        <div class="chip" data-c="Fouls" onclick="setCat('Fouls')">Fouls</div>
+        <div class="chip" data-c="Turnovers" onclick="setCat('Turnovers')">TOs</div>
+        <div class="chip" data-c="Tackles" onclick="setCat('Tackles')">Tackles</div>
+        <div class="chip" data-c="Possession & Attack" onclick="setCat('Possession & Attack')">Attack</div>
+        <div class="chip" data-c="Player Actions" onclick="setCat('Player Actions')">Players</div>
+      </div>
+      <!-- ROW 2: specific event types -->
+      <div class="chips-row" id="evtChips">
+        <div class="chip" data-e="open-play"    onclick="setEvt('open-play')">Open Play</div>
+        <div class="chip" data-e="dead-ball"    onclick="setEvt('dead-ball')">Dead Ball</div>
+        <div class="chip" data-e="goal-chance"  onclick="setEvt('goal-chance')">Goal Chance</div>
+        <div class="chip" data-e="attack"       onclick="setEvt('attack')">Attack</div>
+        <div class="chip" data-e="65m"          onclick="setEvt('65m')">65m Entry</div>
+        <div class="chip" data-e="score-source" onclick="setEvt('score-source')">Score Source</div>
+        <div class="chip" data-e="shot-source"  onclick="setEvt('shot-source')">Shot Source</div>
+        <div class="chip" data-e="score-assist" onclick="setEvt('score-assist')">Score Assist</div>
+      </div>
+      <div class="statbar">
+        <div class="sp">Showing <b id="cTotal">—</b></div>
+        <div class="sp">${GAME.homeTeam} <b id="cHome">—</b></div>
+        <div class="sp">${GAME.awayTeam} <b id="cAway">—</b></div>
+      </div>
+    </div>
+    <div class="event-list" id="eventList"></div>
+  </div>
+
+  <!-- VIDEO PANEL -->
+  <div class="video-panel">
+    <div class="vid-toolbar">
+      <div class="size-grp">
+        <div class="sbtn" onclick="setH(175)">S</div>
+        <div class="sbtn on" onclick="setH(240)">M</div>
+        <div class="sbtn" onclick="setH(310)">L</div>
+        <div class="sbtn" onclick="setH(395)">XL</div>
+      </div>
+      <div class="v-spacer"></div>
+      <div class="tbtn tbtn-fs" onclick="goFS()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M3 3h6v2H5v4H3V3zm12 0h6v6h-2V5h-4V3zM3 15h2v4h4v2H3v-6zm16 4h-4v2h6v-6h-2v4z"/>
+        </svg>
+        FULLSCREEN
+      </div>
+      <a id="ytBtn" class="tbtn tbtn-yt"
+         href="https://youtu.be/${GAME.youtubeId||''}"
+         target="_blank" rel="noopener noreferrer">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="white">
+          <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1C4.5 20.5 12 20.5 12 20.5s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.8 15.5V8.5l6.4 3.5-6.4 3.5z"/>
+        </svg>
+        OPEN IN YOUTUBE
+      </a>
+    </div>
+
+    <div class="vid-wrap" id="vidWrap" style="height:240px">
+      <iframe id="ytFrame"
+        src="https://www.youtube.com/embed/${GAME.youtubeId||''}?start=${GAME.half1Start||0}&fs=1&rel=0"
+        allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture"
+        allowfullscreen>
+      </iframe>
+    </div>
+
+    <div class="now-playing">
+      <div class="np-label">Now Playing</div>
+      <div class="np-name" id="npName">Select an event to jump to that moment</div>
+      <div class="np-meta" id="npMeta">${GAME.homeTeam} v ${GAME.awayTeam} — ${GAME.competition}</div>
+      <div class="np-time" id="npTime"></div>
+    </div>
+
+    <div class="idle" id="idleBox">
+      <div class="idle-icon">▶</div>
+      <div class="idle-text">
+        Click any event on the left<br>to jump to that exact moment.<br><br>
+        <strong>S M L XL</strong> — resize the player<br>
+        <strong>FULLSCREEN</strong> — expand to full screen<br>
+        <strong>OPEN IN YOUTUBE</strong> — open in new tab
+      </div>
+    </div>
+    <div class="nearby" id="nearbyBox" style="display:none">
+      <div class="nb-label">Nearby Events</div>
+      <div id="nearbyItems"></div>
+    </div>
+  </div>`;
+}
+
+// ── Helpers ───────────────────────────────────────────────────
+function fmt(s){ return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'); }
+function bCls(o){
+  if(!o) return '';
+  const u = o.toUpperCase();
+  if(u==='1 POINT'||u==='2 POINT'||u==='GOAL') return 'b-score';
+  if(['KO WON CLEAN','KO BREAK WON','CONTEST WON','FREE WON'].some(x=>u.includes(x))) return 'b-won';
+  if(['WIDE','BLOCKED','KO LOST CLEAN','CONTEST LOST','FREE CONCEDED'].some(x=>u.includes(x))) return 'b-lost';
+  return 'b-mid';
+}
+function teamBadge(team){
+  if(!team) return '';
+  const cls = team === (GAME.homeTeam||'MAYO') ? 'b-mayo' : 'b-london';
+  return `<div class="b ${cls}">${team}</div>`;
+}
+
+// ── Event filter functions ────────────────────────────────────
+const EVT_MAP = {
+  'open-play':    e => /SHOT OPEN PLAY/.test(e.code),
+  'dead-ball':    e => /SHOT DEADBALL/.test(e.code),
+  'goal-chance':  e => /GOAL CHANCE/.test(e.code),
+  'attack':       e => /ATTACKS/.test(e.code),
+  '65m':          e => /65M ENTRY/.test(e.code),
+  'score-source': e => /SCORE SOURCE/.test(e.code),
+  'shot-source':  e => /SHOT SOURCE/.test(e.code),
+  'score-assist': e => /SCORE ASSIST/.test(e.code),
+};
+
+// ── Populate players ──────────────────────────────────────────
+function populatePlayers(){
+  const ps = [...new Set(ALL.map(e=>e.player).filter(Boolean))].sort();
+  const sel = document.getElementById('fPlayer');
+  if(!sel) return;
+  ps.forEach(p=>{
+    const o = document.createElement('option');
+    o.value=p; o.textContent=p; sel.appendChild(o);
+  });
+}
+
+// ── Category & event chips ────────────────────────────────────
+function setCat(c){
+  activeCat = c;
+  // Clear row 2 when row 1 is used
+  activeEvent = '';
+  document.querySelectorAll('[data-c]').forEach(ch=>ch.classList.toggle('on',ch.dataset.c===c));
+  document.querySelectorAll('[data-e]').forEach(ch=>ch.classList.remove('on'));
+  applyFilters();
+}
+function setEvt(e){
+  // Toggle
+  if(activeEvent === e){
+    activeEvent = '';
+  } else {
+    activeEvent = e;
+    // Clear row 1 category (reset to All visually but keep for AND logic)
+    activeCat = 'All';
+    document.querySelectorAll('[data-c]').forEach(ch=>ch.classList.toggle('on',ch.dataset.c==='All'));
+  }
+  document.querySelectorAll('[data-e]').forEach(ch=>ch.classList.toggle('on',ch.dataset.e===e&&activeEvent===e));
+  applyFilters();
+}
+
+// ── Filter & Render ───────────────────────────────────────────
+function applyFilters(){
+  const q      = document.getElementById('srch')?.value.toLowerCase()||'';
+  const team   = document.getElementById('fTeam')?.value||'';
+  const player = document.getElementById('fPlayer')?.value||'';
+  const half   = document.getElementById('fHalf')?.value||'';
+
+  filtered = ALL.filter(e=>{
+    if(activeCat!=='All' && e.category!==activeCat) return false;
+    if(activeEvent && EVT_MAP[activeEvent] && !EVT_MAP[activeEvent](e)) return false;
+    if(team && e.team!==team) return false;
+    if(player && e.player!==player) return false;
+    if(half && e.half!==half) return false;
+    if(q && !(e.code+' '+e.player+' '+e.outcome+' '+e.team+' '+e.subtype+' '+e.category).toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  render();
+  const homeTeam = GAME.homeTeam||'';
+  document.getElementById('cTotal').textContent = filtered.length.toLocaleString();
+  document.getElementById('cHome').textContent  = filtered.filter(e=>e.team===homeTeam).length;
+  document.getElementById('cAway').textContent  = filtered.filter(e=>e.team===GAME.awayTeam).length;
+}
+
+function render(){
+  const el = document.getElementById('eventList');
+  if(!el) return;
+  if(!filtered.length){ el.innerHTML='<div class="empty">No events match your filters</div>'; return; }
+  let html='', lh='';
+  filtered.forEach((ev,i)=>{
+    if(ev.half!==lh){ html+=`<div class="hdiv">— ${ev.half} —</div>`; lh=ev.half; }
+    const tb = teamBadge(ev.team);
+    const ob = ev.outcome ? `<div class="b ${bCls(ev.outcome)}">${ev.outcome}</div>` : '';
+    const sb = ev.subtype && ev.subtype!==ev.outcome ? `<div class="b b-mid">${ev.subtype}</div>` : '';
+    const ac = ev.id===activeId?' on':'';
+    const meta = [ev.player, ev.subtype||ev.category].filter(Boolean).join(' · ');
+    html+=`<div class="erow${ac}" onclick="pick(${i})">
+      <div class="etime"><div class="egame">${ev.gameTime}</div><div class="evid">${fmt(ev.start)}</div></div>
+      <div class="ebody"><div class="ecode">${ev.code}</div><div class="emeta">${meta}</div></div>
+      <div class="ebadges">${tb}${ob}${sb}</div>
+    </div>`;
+  });
+  el.innerHTML = html;
+}
+
+// ── Pick event ────────────────────────────────────────────────
+function pick(fi){
+  const ev = filtered[fi]; if(!ev) return;
+  activeId = ev.id; curT = ev.driveT;
+
+  // Update embed — swap src for instant seek
+  document.getElementById('ytFrame').src =
+    `https://www.youtube.com/embed/${GAME.youtubeId}?start=${ev.driveT}&fs=1&rel=0&autoplay=1`;
+  document.getElementById('ytBtn').href =
+    `https://www.youtube.com/watch?v=${GAME.youtubeId}&t=${ev.driveT}s`;
+
+  document.getElementById('npName').textContent = ev.code;
+  document.getElementById('npMeta').textContent = [ev.gameTime, ev.player, ev.outcome].filter(Boolean).join(' · ');
+  document.getElementById('npTime').textContent = `Video: ${fmt(ev.driveT)}`;
+  document.getElementById('idleBox').style.display = 'none';
+  document.getElementById('nearbyBox').style.display = 'block';
+
+  // Nearby
+  const ai = ALL.findIndex(e=>e.id===ev.id);
+  const nearby = ALL.slice(Math.max(0,ai-7),ai+8).filter(e=>e.id!==ev.id);
+  document.getElementById('nearbyItems').innerHTML = nearby.map(r=>`
+    <div class="nbrow${r.id===ev.id?' on':''}" onclick="pickById('${r.id}')">
+      <div class="nb-time">${r.gameTime}</div>
+      <div class="nb-code">${r.code}${r.player?' · '+r.player:''}</div>
+    </div>`).join('');
+
+  document.querySelectorAll('.erow').forEach((el,i)=>el.classList.toggle('on',i===fi));
+}
+
+function pickById(id){
+  const fi = filtered.findIndex(e=>e.id===id);
+  if(fi>=0){ pick(fi); return; }
+  const ev = ALL.find(e=>e.id===id); if(!ev) return;
+  activeId=ev.id; curT=ev.driveT;
+  document.getElementById('ytFrame').src = `https://www.youtube.com/embed/${GAME.youtubeId}?start=${ev.driveT}&fs=1&rel=0&autoplay=1`;
+  document.getElementById('ytBtn').href  = `https://www.youtube.com/watch?v=${GAME.youtubeId}&t=${ev.driveT}s`;
+  document.getElementById('npName').textContent = ev.code;
+  document.getElementById('npMeta').textContent = [ev.gameTime,ev.player,ev.outcome].filter(Boolean).join(' · ');
+  document.getElementById('npTime').textContent = `Video: ${fmt(ev.driveT)}`;
+}
+
+// ── Size controls ─────────────────────────────────────────────
+const HH = [175,240,310,395];
+function setH(h){
+  document.querySelectorAll('.sbtn').forEach((b,i)=>b.classList.toggle('on',HH[i]===h));
+  const wrap = document.getElementById('vidWrap');
+  if(wrap) wrap.style.height = h+'px';
+}
+function initSizes(){ setH(240); }
+
+// ── Fullscreen ────────────────────────────────────────────────
+function goFS(){
+  const el = document.getElementById('vidWrap');
+  const req = el.requestFullscreen||el.webkitRequestFullscreen||el.mozRequestFullScreen;
+  if(req) req.call(el);
+  else window.open(`https://www.youtube.com/watch?v=${GAME.youtubeId}&t=${curT}s`,'_blank','noopener');
+}
+
+// ── Start ─────────────────────────────────────────────────────
+loadGame();
+</script>
+</body>
+</html>
