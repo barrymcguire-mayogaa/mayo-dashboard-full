@@ -459,7 +459,7 @@ function drawTL(){
   filtered.forEach(ev=>{
     const x=xF(ev.driveT),w=Math.max(3,((ev.end-ev.start)/vD)*W);
     if(x+w<LW||x>W)return;
-    const iH=ev.team===GAME.homeTeam,y=iH?hY:aY;
+    const iH=ev.team.toUpperCase()===(GAME.homeTeam||'').toUpperCase(),y=iH?hY:aY;
     ctx.fillStyle=ev.id===activeId?'#fff':(iH?hC:aC);
     ctx.globalAlpha=ev.id===activeId?1:0.82;
     ctx.fillRect(Math.max(LW,x),y+2,Math.min(w,W-Math.max(LW,x)),RH-4);
