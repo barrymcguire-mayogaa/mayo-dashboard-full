@@ -547,6 +547,8 @@ function processGaelicTracker(d, half1Video, half2Video){
       const m=Math.floor(halfSecs/60), s=halfSecs%60;
       gameTimeStr = `2H ${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
     }
+    // Kickouts: seek 8s earlier (GT records the catch, not the kick)
+    if(gtCategory(item.event) === 'Kickouts') driveT -= 8;
     driveT = Math.max(0, Math.round(driveT) - 2);
     const player = (item.player||'').replace(/\s*\(\d+\)\s*$/, '').trim()
                                     .replace(/\s*\(C\)\s*/,'').trim();
