@@ -170,7 +170,7 @@ code{background:var(--card);border:1px solid var(--border);border-radius:4px;pad
 <div class="page">
   <div class="page-title">Add New Game</div>
   <div class="page-sub">
-    Supports both <strong>Hudl Sportscode XML</strong> and <strong>Gaelic Tracker JSON</strong> exports.
+    Supports <strong>Hudl Sportscode XML</strong>, <strong>GIU XML</strong> and <strong>Gaelic Tracker JSON</strong> exports.
     Fill in the game details, enter the video start times, then upload your file.
     Gaelic Tracker files will auto-fill teams, colours and date automatically.
   </div>
@@ -283,7 +283,7 @@ code{background:var(--card);border:1px solid var(--border);border-radius:4px;pad
       <div class="step-num">3</div>
       <div>
         <div class="step-title">Upload Match Data File</div>
-        <div class="step-sub">Sportscode XML <em>or</em> Gaelic Tracker JSON — file type is auto-detected</div>
+        <div class="step-sub">Sportscode XML, GIU XML <em>or</em> Gaelic Tracker JSON — auto-detected</div>
       </div>
     </div>
 
@@ -294,7 +294,7 @@ code{background:var(--card);border:1px solid var(--border);border-radius:4px;pad
          ondrop="handleDrop(event)">
       <div class="dz-icon">📂</div>
       <div class="dz-title">Drop file here or click to browse</div>
-      <div class="dz-sub">Sportscode <code>.xml</code> or Gaelic Tracker <code>.json</code></div>
+      <div class="dz-sub">Sportscode / GIU <code>.xml</code> &nbsp;or&nbsp; Gaelic Tracker <code>.json</code></div>
       <div class="dz-file" id="dzFileName"></div>
       <div id="srcBadge" style="display:none;" class="src-badge"></div>
     </div>
@@ -419,7 +419,7 @@ async function setFile(f){
     }
   } else {
     badge.className = 'src-badge sportscode';
-    badge.textContent = '🎬 Sportscode XML';
+    badge.textContent = '🎬 Sportscode / GIU XML';
     badge.style.display = 'inline-flex';
     gtData = null;
   }
@@ -626,73 +626,160 @@ async function processGame(){
       setProgress(10, 'Reading XML file…');
       const buffer = await xmlFile.arrayBuffer();
       setProgress(25, 'Decoding XML…');
+
+      // Detect encoding by Byte Order Mark (BOM) — never guess
+      const bom = new Uint8Array(buffer.slice(0,2));
       let text;
-      try{
-        const decoder = new TextDecoder('utf-16le');
-        text = decoder.decode(buffer);
-        if(text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
-      } catch(e){
-        text = new TextDecoder('utf-8').decode(buffer);
-      }
-      setProgress(40, 'Parsing events…');
+      if(bom[0]===0xFF && bom[1]===0xFE)      text = new TextDecoder('utf-16le').decode(buffer);
+      else if(bom[0]===0xFE && bom[1]===0xFF) text = new TextDecoder('utf-16be').decode(buffer);
+      else                                      text = new TextDecoder('utf-8').decode(buffer);
+      text = text.replace(/^\uFEFF/,''); // strip any lingering BOM character
+
+      setProgress(40, 'Parsing XML…');
       const parser = new DOMParser();
       const doc = parser.parseFromString(text, 'text/xml');
-      if(doc.querySelector('parsererror')){ showError('Could not parse the XML file. Please check it is a valid Sportscode export.'); return; }
+      if(doc.querySelector('parsererror')){ showError('Could not parse the XML file. Please check it is a valid Sportscode or GIU export.'); return; }
 
       const instances = Array.from(doc.querySelectorAll('instance'));
       setProgress(55, `Found ${instances.length} instances…`);
 
-      let xmlHalf1=null, xmlHalf2=null, xmlET1=null, xmlET2=null;
-      instances.forEach(inst=>{
-        const code = inst.querySelector('code')?.textContent?.trim()||'';
-        const start = parseFloat(inst.querySelector('start')?.textContent||0);
-        if(code==='1st Half' && xmlHalf1===null) xmlHalf1=start;
-        if(code==='2nd Half' && xmlHalf2===null) xmlHalf2=start;
-        if(code==='ET 1st Half' && xmlET1===null) xmlET1=start;
-        if(code==='ET 2nd Half' && xmlET2===null) xmlET2=start;
-      });
-      if(xmlHalf1===null){ showError('Could not find "1st Half" marker in the XML.'); return; }
-      if(xmlHalf2===null){ showError('Could not find "2nd Half" marker in the XML.'); return; }
+      // Helper: read a named label group from an <instance>
+      function getLbl(inst, group){
+        for(const lbl of inst.querySelectorAll('label')){
+          if((lbl.querySelector('group')?.textContent||'').trim()===group)
+            return (lbl.querySelector('text')?.textContent||'').trim();
+        }
+        return '';
+      }
 
-      const offsets = {
-        '1st Half': half1Video - xmlHalf1,
-        '2nd Half': half2Video - xmlHalf2,
-        'ET 1st Half': et1Video!==null&&xmlET1!==null ? et1Video-xmlET1 : null,
-        'ET 2nd Half': et2Video!==null&&xmlET2!==null ? et2Video-xmlET2 : null,
-      };
-      const xmlRefs = {'1st Half':xmlHalf1,'2nd Half':xmlHalf2,'ET 1st Half':xmlET1,'ET 2nd Half':xmlET2};
-      const SKIP = new Set(['THROW-IN','1st Half','2nd Half','ET 1st Half','ET 2nd Half','Count']);
+      // Auto-detect GIU format: uses <ALL_INSTANCES> and P1 START / P3 START codes
+      const isGIU = !!doc.querySelector('ALL_INSTANCES') ||
+                    instances.some(i=>/^P\d START$/.test((i.querySelector('code')?.textContent||'').trim()));
 
       setProgress(65, 'Processing events…');
-      instances.forEach(inst=>{
-        const code = inst.querySelector('code')?.textContent?.trim()||'';
-        if(SKIP.has(code)) return;
-        const start = parseFloat(inst.querySelector('start')?.textContent||0);
-        const end   = parseFloat(inst.querySelector('end')?.textContent||0);
-        const labels = {};
-        inst.querySelectorAll('label').forEach(l=>{
-          const g = l.querySelector('group')?.textContent?.trim()||'NO_GROUP';
-          const t = l.querySelector('text')?.textContent?.trim()||'';
-          if(t) labels[g] = t;
+
+      if(isGIU){
+        // ── GIU XML format ──────────────────────────────────────
+        document.getElementById('srcBadge').textContent = '📊 GIU XML';
+
+        // Find quarter start markers: P1=Q1 (1st half start), P3=Q3 (2nd half start)
+        let xmlP1=null, xmlP3=null;
+        instances.forEach(inst=>{
+          const code = (inst.querySelector('code')?.textContent||'').trim();
+          const start = parseFloat(inst.querySelector('start')?.textContent||0);
+          if(code==='P1 START' && xmlP1===null) xmlP1=start;
+          if(code==='P3 START' && xmlP3===null) xmlP3=start;
         });
-        let half = '1st Half';
-        if(xmlET2!==null && start>=xmlET2) half='ET 2nd Half';
-        else if(xmlET1!==null && start>=xmlET1) half='ET 1st Half';
-        else if(xmlHalf2!==null && start>=xmlHalf2) half='2nd Half';
-        const offset = offsets[half]||0;
-        const driveT = Math.max(0, Math.round(start+offset)-2);
-        const team = labels['Team Name'] || (code.includes('MAYO')?'MAYO': code.includes(awayTeam.toUpperCase())?awayTeam.toUpperCase():'');
-        const player = labels['Mayo Player Labels'] || labels['NO_GROUP'] || '';
-        const outcome = labels['Shot Outcomes']||labels['Game Involvement Outcomes']||labels['Kickout Outcomes']||labels['Turnover Outcomes']||labels['Tackle Outcomes']||'';
-        const subtype = labels['Deadball Shot Type']||labels['Shot Zones']||labels['Kickout Locations']||'';
-        events.push({
-          id: inst.querySelector('ID')?.textContent?.trim()||String(events.length+1),
-          start:Math.round(start), end:Math.round(end),
-          half, gameTime:getGameTime(half,start,xmlRefs),
-          code, team, player, outcome, subtype,
-          category:getCategory(code), driveT,
+        if(xmlP1===null){ showError('Could not find "P1 START" marker in the GIU XML.'); return; }
+        if(xmlP3===null){ showError('Could not find "P3 START" marker (2nd half start) in the GIU XML.'); return; }
+
+        const offset1H = half1Video - xmlP1;
+        const offset2H = half2Video - xmlP3;
+        const GIU_SKIP = /^P\d START$/;
+
+        // Extract team from code prefix (e.g. "Roscommon Shot (P)" → "ROSCOMMON")
+        function giuTeam(code){
+          const cl = code.toLowerCase();
+          if(cl.startsWith(homeTeam.toLowerCase())) return homeTeam.toUpperCase();
+          if(cl.startsWith(awayTeam.toLowerCase())) return awayTeam.toUpperCase();
+          return '';
+        }
+        // Map GIU code → COHESION category
+        function giuCategory(code){
+          const cu = code.toUpperCase();
+          if(/SHOT/.test(cu)) return 'Shots & Scores';
+          if(/KICKOUT/.test(cu)) return 'Kickouts';
+          if(/TURNOVER/.test(cu)) return 'Turnovers';
+          if(/FOUL/.test(cu)) return 'Fouls';
+          if(/TACKLE/.test(cu)) return 'Tackles';
+          if(/POSS/.test(cu)) return 'Possession & Attack';
+          return 'Player Actions';
+        }
+
+        instances.forEach(inst=>{
+          const code = (inst.querySelector('code')?.textContent||'').trim();
+          if(GIU_SKIP.test(code)) return;
+          const start  = parseFloat(inst.querySelector('start')?.textContent||0);
+          const end    = parseFloat(inst.querySelector('end')?.textContent||0);
+          const labels = {};
+          inst.querySelectorAll('label').forEach(l=>{
+            const g = (l.querySelector('group')?.textContent||'').trim();
+            const t = (l.querySelector('text')?.textContent||'').trim();
+            if(g && t) labels[g] = t;
+          });
+          // Use explicit Half label; fall back to position relative to P3
+          const half      = labels['Half'] || (start >= xmlP3 ? '2nd Half' : '1st Half');
+          const refStart  = half === '2nd Half' ? xmlP3 : xmlP1;
+          const offset    = half === '2nd Half' ? offset2H : offset1H;
+          const driveT    = Math.max(0, Math.round(start + offset) - 2);
+          const relSecs   = Math.max(0, Math.round(start - refStart));
+          const gm = Math.floor(relSecs/60), gs = relSecs%60;
+          const gameTimeStr = `${half==='2nd Half'?'2H':'1H'} ${String(gm).padStart(2,'0')}:${String(gs).padStart(2,'0')}`;
+          const outcome = labels['ShotOutcome'] || labels['KickoutOutcome'] || labels['PossFrom'] || '';
+          const subtype = labels['KODistance'] || labels['PitchArea'] || '';
+          events.push({
+            id: (inst.querySelector('ID')?.textContent||'').trim() || String(events.length+1),
+            start:Math.round(start), end:Math.round(end),
+            half, gameTime:gameTimeStr,
+            code, team:giuTeam(code), player:labels['Player']||'',
+            outcome, subtype,
+            category:giuCategory(code), driveT, labels,
+          });
         });
-      });
+
+      } else {
+        // ── Sportscode XML format ───────────────────────────────
+        let xmlHalf1=null, xmlHalf2=null, xmlET1=null, xmlET2=null;
+        instances.forEach(inst=>{
+          const code = inst.querySelector('code')?.textContent?.trim()||'';
+          const start = parseFloat(inst.querySelector('start')?.textContent||0);
+          if(code==='1st Half' && xmlHalf1===null) xmlHalf1=start;
+          if(code==='2nd Half' && xmlHalf2===null) xmlHalf2=start;
+          if(code==='ET 1st Half' && xmlET1===null) xmlET1=start;
+          if(code==='ET 2nd Half' && xmlET2===null) xmlET2=start;
+        });
+        if(xmlHalf1===null){ showError('Could not find "1st Half" marker in the XML.'); return; }
+        if(xmlHalf2===null){ showError('Could not find "2nd Half" marker in the XML.'); return; }
+
+        const offsets = {
+          '1st Half': half1Video - xmlHalf1,
+          '2nd Half': half2Video - xmlHalf2,
+          'ET 1st Half': et1Video!==null&&xmlET1!==null ? et1Video-xmlET1 : null,
+          'ET 2nd Half': et2Video!==null&&xmlET2!==null ? et2Video-xmlET2 : null,
+        };
+        const xmlRefs = {'1st Half':xmlHalf1,'2nd Half':xmlHalf2,'ET 1st Half':xmlET1,'ET 2nd Half':xmlET2};
+        const SKIP = new Set(['THROW-IN','1st Half','2nd Half','ET 1st Half','ET 2nd Half','Count']);
+
+        instances.forEach(inst=>{
+          const code = inst.querySelector('code')?.textContent?.trim()||'';
+          if(SKIP.has(code)) return;
+          const start = parseFloat(inst.querySelector('start')?.textContent||0);
+          const end   = parseFloat(inst.querySelector('end')?.textContent||0);
+          const labels = {};
+          inst.querySelectorAll('label').forEach(l=>{
+            const g = l.querySelector('group')?.textContent?.trim()||'NO_GROUP';
+            const t = l.querySelector('text')?.textContent?.trim()||'';
+            if(t) labels[g] = t;
+          });
+          let half = '1st Half';
+          if(xmlET2!==null && start>=xmlET2) half='ET 2nd Half';
+          else if(xmlET1!==null && start>=xmlET1) half='ET 1st Half';
+          else if(xmlHalf2!==null && start>=xmlHalf2) half='2nd Half';
+          const offset = offsets[half]||0;
+          const driveT = Math.max(0, Math.round(start+offset)-2);
+          const team = labels['Team Name'] || (code.includes('MAYO')?'MAYO': code.includes(awayTeam.toUpperCase())?awayTeam.toUpperCase():'');
+          const player = labels['Mayo Player Labels'] || labels['NO_GROUP'] || '';
+          const outcome = labels['Shot Outcomes']||labels['Game Involvement Outcomes']||labels['Kickout Outcomes']||labels['Turnover Outcomes']||labels['Tackle Outcomes']||'';
+          const subtype = labels['Deadball Shot Type']||labels['Shot Zones']||labels['Kickout Locations']||'';
+          events.push({
+            id: inst.querySelector('ID')?.textContent?.trim()||String(events.length+1),
+            start:Math.round(start), end:Math.round(end),
+            half, gameTime:getGameTime(half,start,xmlRefs),
+            code, team, player, outcome, subtype,
+            category:getCategory(code), driveT,
+          });
+        });
+      }
       setProgress(80, 'Generating files…');
     }
 
