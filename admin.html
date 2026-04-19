@@ -662,19 +662,19 @@ async function processGame(){
         // ── GIU XML format ──────────────────────────────────────
         document.getElementById('srcBadge').textContent = '📊 GIU XML';
 
-        // Find quarter start markers: P1=Q1 (1st half start), P3=Q3 (2nd half start)
-        let xmlP1=null, xmlP3=null;
+        // Find period start markers: P1 START = 1st half, P2 START = 2nd half
+        let xmlP1=null, xmlP2=null;
         instances.forEach(inst=>{
           const code = (inst.querySelector('code')?.textContent||'').trim();
           const start = parseFloat(inst.querySelector('start')?.textContent||0);
           if(code==='P1 START' && xmlP1===null) xmlP1=start;
-          if(code==='P3 START' && xmlP3===null) xmlP3=start;
+          if(code==='P2 START' && xmlP2===null) xmlP2=start;
         });
         if(xmlP1===null){ showError('Could not find "P1 START" marker in the GIU XML.'); return; }
-        if(xmlP3===null){ showError('Could not find "P3 START" marker (2nd half start) in the GIU XML.'); return; }
+        if(xmlP2===null){ showError('Could not find "P2 START" marker (2nd half start) in the GIU XML.'); return; }
 
         const offset1H = half1Video - xmlP1;
-        const offset2H = half2Video - xmlP3;
+        const offset2H = half2Video - xmlP2;
         const GIU_SKIP = /^P\d START$/;
 
         // Extract team from code prefix (e.g. "Roscommon Shot (P)" → "ROSCOMMON")
@@ -707,9 +707,9 @@ async function processGame(){
             const t = (l.querySelector('text')?.textContent||'').trim();
             if(g && t) labels[g] = t;
           });
-          // Use explicit Half label; fall back to position relative to P3
-          const half      = labels['Half'] || (start >= xmlP3 ? '2nd Half' : '1st Half');
-          const refStart  = half === '2nd Half' ? xmlP3 : xmlP1;
+          // Use explicit Half label; fall back to position relative to P2
+          const half      = labels['Half'] || (start >= xmlP2 ? '2nd Half' : '1st Half');
+          const refStart  = half === '2nd Half' ? xmlP2 : xmlP1;
           const offset    = half === '2nd Half' ? offset2H : offset1H;
           const driveT    = Math.max(0, Math.round(start + offset) - 2);
           const relSecs   = Math.max(0, Math.round(start - refStart));
