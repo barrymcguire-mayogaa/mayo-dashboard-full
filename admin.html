@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COHESION — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;600;700;800;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+[data-theme="dark"]{
+  --bg:#181820;--panel:#1e1e28;--card:#252530;--hover:#2c2c3a;
+  --border:rgba(255,255,255,0.08);--t1:#f0f0f5;--t2:#8888a0;--t3:#52526a;
+  --accent:#4fc3f7;--accent-bg:rgba(79,195,247,0.12);--shadow:rgba(0,0,0,0.4);
+  --green:#4caf50;--green-bg:rgba(76,175,80,0.12);
+  --red:#f44336;--red-bg:rgba(244,67,54,0.12);
+}
+[data-theme="light"]{
+  --bg:#f0eeeb;--panel:#ffffff;--card:#f7f6f3;--hover:#ebe9e5;
+  --border:rgba(0,0,0,0.1);--t1:#1a1a28;--t2:#555572;--t3:#888899;
+  --accent:#0369a1;--accent-bg:rgba(3,105,161,0.08);--shadow:rgba(0,0,0,0.12);
+  --green:#15803d;--green-bg:rgba(21,128,61,0.1);
+  --red:#b91c1c;--red-bg:rgba(185,28,28,0.1);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--t1);min-height:100vh;transition:background .2s,color .2s;}
+header{height:54px;background:var(--panel);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:12px;position:sticky;top:0;z-index:50;}
+.logo{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;letter-spacing:4px;color:var(--t1);text-decoration:none;}
+.logo span{color:var(--accent);}
+.admin-badge{font:700 10px 'Barlow Condensed',sans-serif;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);background:var(--accent-bg);border:1px solid var(--accent);padding:3px 8px;border-radius:5px;}
+.hdr-s{flex:1;}
+.hdr-btn{display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:7px;font:700 11px 'Barlow Condensed',sans-serif;letter-spacing:.5px;color:var(--t2);border:1px solid var(--border);background:var(--card);text-decoration:none;cursor:pointer;transition:all .15s;}
+.hdr-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+.page{max-width:760px;margin:0 auto;padding:28px 20px 60px;}
+.page-title{font:800 28px 'Barlow Condensed',sans-serif;letter-spacing:1px;margin-bottom:6px;}
+.page-sub{font-size:13px;color:var(--t2);margin-bottom:28px;line-height:1.6;}
+
+/* STEPS */
+.step{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:20px;}
+.step-header{display:flex;align-items:center;gap:12px;margin-bottom:18px;}
+.step-num{
+  width:30px;height:30px;border-radius:50%;
+  background:var(--accent-bg);border:1px solid var(--accent);
+  display:flex;align-items:center;justify-content:center;
+  font:800 13px 'Barlow Condensed',sans-serif;color:var(--accent);flex-shrink:0;
+}
+.step-title{font:700 16px 'Barlow Condensed',sans-serif;letter-spacing:.5px;}
+.step-sub{font-size:12px;color:var(--t3);margin-top:2px;}
+
+/* FORM */
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+@media(max-width:500px){.field-grid{grid-template-columns:1fr;}}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field.full{grid-column:1/-1;}
+label{font:700 10px 'Barlow Condensed',sans-serif;letter-spacing:1.5px;color:var(--t3);text-transform:uppercase;}
+input[type=text],input[type=date],input[type=url],select.finput{
+  background:var(--card);border:1px solid var(--border);border-radius:7px;
+  padding:9px 12px;color:var(--t1);font:13px 'Barlow',sans-serif;outline:none;
+  transition:border-color .2s;width:100%;
+}
+input::placeholder{color:var(--t3);}
+input:focus,select.finput:focus{border-color:var(--accent);}
+select.finput option{background:var(--card);}
+.help{font-size:11px;color:var(--t3);margin-top:2px;line-height:1.5;}
+
+/* TIME INPUTS */
+.time-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:12px;}
+@media(max-width:500px){.time-grid{grid-template-columns:1fr 1fr;}}
+.et-toggle{
+  display:flex;align-items:center;gap:8px;cursor:pointer;
+  font:600 12px 'Barlow',sans-serif;color:var(--t2);margin-bottom:12px;
+  user-select:none;
+}
+.et-toggle input{cursor:pointer;accent-color:var(--accent);}
+.et-fields{display:none;}
+.et-fields.show{display:block;}
+
+/* XML DROP ZONE */
+.drop-zone{
+  border:2px dashed var(--border);border-radius:10px;padding:32px 20px;
+  text-align:center;cursor:pointer;transition:all .2s;
+  background:var(--card);
+}
+.drop-zone:hover,.drop-zone.over{border-color:var(--accent);background:var(--accent-bg);}
+.drop-zone.ready{border-color:var(--green);background:var(--green-bg);}
+.dz-icon{font-size:28px;opacity:.4;margin-bottom:8px;}
+.dz-title{font:700 14px 'Barlow Condensed',sans-serif;letter-spacing:.5px;color:var(--t2);margin-bottom:4px;}
+.dz-sub{font-size:12px;color:var(--t3);}
+.dz-file{font:700 13px 'Barlow Condensed',sans-serif;color:var(--green);margin-top:6px;}
+input[type=file]{display:none;}
+
+/* PROCESS BTN */
+.process-btn{
+  width:100%;padding:13px;border-radius:9px;
+  background:var(--accent);color:#fff;
+  font:700 14px 'Barlow Condensed',sans-serif;letter-spacing:2px;text-transform:uppercase;
+  border:none;cursor:pointer;transition:all .15s;margin-top:4px;
+}
+.process-btn:hover{opacity:.9;transform:translateY(-1px);}
+.process-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+
+/* PROGRESS */
+.progress-block{display:none;margin-top:16px;}
+.progress-block.show{display:block;}
+.prog-bar-wrap{background:var(--card);border-radius:4px;height:6px;margin:8px 0 12px;overflow:hidden;}
+.prog-bar{height:100%;background:var(--accent);border-radius:4px;transition:width .3s;}
+.prog-msg{font-size:12px;color:var(--t2);}
+
+/* DOWNLOADS */
+.downloads{display:none;margin-top:16px;}
+.downloads.show{display:block;}
+.dl-title{font:700 13px 'Barlow Condensed',sans-serif;letter-spacing:1px;color:var(--t2);margin-bottom:10px;}
+.dl-btn{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 16px;border-radius:8px;
+  background:var(--green-bg);border:1px solid var(--green);color:var(--green);
+  font:700 12px 'Barlow Condensed',sans-serif;letter-spacing:.5px;
+  cursor:pointer;text-decoration:none;margin-bottom:8px;
+  transition:all .15s;
+}
+.dl-btn:hover{background:var(--green);color:#fff;}
+
+/* INSTRUCTIONS */
+.instructions{
+  background:var(--card);border:1px solid var(--border);border-radius:10px;
+  padding:18px;margin-top:12px;
+}
+.inst-title{font:700 12px 'Barlow Condensed',sans-serif;letter-spacing:1px;color:var(--t2);margin-bottom:10px;}
+.inst-step{
+  display:flex;gap:10px;margin-bottom:10px;font-size:12px;color:var(--t2);line-height:1.6;
+}
+.inst-n{
+  width:20px;height:20px;border-radius:50%;background:var(--accent-bg);
+  border:1px solid var(--accent);display:flex;align-items:center;justify-content:center;
+  font:800 10px 'Barlow Condensed',sans-serif;color:var(--accent);flex-shrink:0;margin-top:1px;
+}
+code{background:var(--card);border:1px solid var(--border);border-radius:4px;padding:1px 5px;font-size:11px;color:var(--accent);}
+
+/* ERROR */
+.error-box{
+  background:var(--red-bg);border:1px solid var(--red);border-radius:8px;
+  padding:12px 16px;margin-top:12px;font-size:12px;color:var(--red);display:none;
+}
+.error-box.show{display:block;}
+
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+</style>
+</head>
+<body>
+
+<header>
+  <a href="library.html" class="logo">CO<span>HE</span>SION</a>
+  <div class="admin-badge">Admin</div>
+  <div class="hdr-s"></div>
+  <div class="hdr-btn" onclick="toggleTheme()" id="themeToggle" style="width:36px;height:36px;justify-content:center;border-radius:50%;padding:0;">☀️</div>
+  <a href="library.html" class="hdr-btn">← Library</a>
+  <div class="hdr-btn" onclick="logout()">Sign Out</div>
+</header>
+
+<div class="page">
+  <div class="page-title">Add New Game</div>
+  <div class="page-sub">
+    Fill in the game details, enter the video start times, then upload the Sportscode XML.
+    The tool will process the XML in your browser and generate ready-to-upload files for GitHub.
+  </div>
+
+  <!-- STEP 1: Game Details -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-num">1</div>
+      <div>
+        <div class="step-title">Game Details</div>
+        <div class="step-sub">Fill in the match information</div>
+      </div>
+    </div>
+
+    <div class="field-grid">
+      <div class="field">
+        <label>Home Team</label>
+        <input type="text" id="homeTeam" placeholder="e.g. Mayo" value="Mayo">
+      </div>
+      <div class="field">
+        <label>Away Team</label>
+        <input type="text" id="awayTeam" placeholder="e.g. Galway">
+      </div>
+      <div class="field">
+        <label>Home Jersey Colour</label>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="color" id="homeColor" value="#0B2447" style="width:42px;height:36px;padding:2px;border-radius:6px;border:1px solid var(--border);background:var(--card);cursor:pointer;">
+          <input type="text" id="homeColorHex" value="#0B2447" placeholder="#0B2447" style="flex:1;" oninput="syncColor('home',this.value)">
+        </div>
+        <div class="help">Main jersey colour used on timeline and badges</div>
+      </div>
+      <div class="field">
+        <label>Away Jersey Colour</label>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="color" id="awayColor" value="#22C55E" style="width:42px;height:36px;padding:2px;border-radius:6px;border:1px solid var(--border);background:var(--card);cursor:pointer;">
+          <input type="text" id="awayColorHex" value="#22C55E" placeholder="#22C55E" style="flex:1;" oninput="syncColor('away',this.value)">
+        </div>
+        <div class="help">Main jersey colour used on timeline and badges</div>
+      </div>
+      <div class="field">
+        <label>Competition</label>
+        <select class="finput" id="competition">
+          <option value="">Select competition</option>
+          <option>FBD League</option>
+          <option>National Football League</option>
+          <option>Connacht SFC</option>
+          <option>All-Ireland SFC</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Round / Stage</label>
+        <input type="text" id="round" placeholder="e.g. Quarter-Final, Round 1">
+      </div>
+      <div class="field">
+        <label>Date</label>
+        <input type="date" id="gameDate">
+      </div>
+      <div class="field">
+        <label>YouTube Video URL</label>
+        <input type="url" id="youtubeUrl" placeholder="https://youtu.be/XXXXXXXXXXX">
+        <div class="help">Paste the YouTube link for this game. Unlisted videos work fine.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2: Video Timing -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-num">2</div>
+      <div>
+        <div class="step-title">Video Start Times</div>
+        <div class="step-sub">When does each period begin in the video? (MM:SS format)</div>
+      </div>
+    </div>
+
+    <div class="time-grid">
+      <div class="field">
+        <label>1st Half Start</label>
+        <input type="text" id="t1" placeholder="01:43" maxlength="5">
+      </div>
+      <div class="field">
+        <label>2nd Half Start</label>
+        <input type="text" id="t2" placeholder="38:09" maxlength="5">
+      </div>
+    </div>
+
+    <label class="et-toggle">
+      <input type="checkbox" id="etCheck" onchange="toggleET()">
+      This game has extra time
+    </label>
+    <div class="et-fields" id="etFields">
+      <div class="time-grid">
+        <div class="field">
+          <label>ET 1st Half Start</label>
+          <input type="text" id="tet1" placeholder="MM:SS" maxlength="5">
+        </div>
+        <div class="field">
+          <label>ET 2nd Half Start</label>
+          <input type="text" id="tet2" placeholder="MM:SS" maxlength="5">
+        </div>
+      </div>
+    </div>
+    <div class="help">Find these times by opening the video in YouTube and noting when the referee throws in the ball at the start of each period.</div>
+  </div>
+
+  <!-- STEP 3: XML Upload & Process -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-num">3</div>
+      <div>
+        <div class="step-title">Upload Sportscode XML</div>
+        <div class="step-sub">Drop or click to select the XML export from Hudl Sportscode</div>
+      </div>
+    </div>
+
+    <div class="drop-zone" id="dropZone"
+         onclick="document.getElementById('xmlFile').click()"
+         ondragover="e=>{e.preventDefault();this.classList.add('over')}"
+         ondragleave="this.classList.remove('over')"
+         ondrop="handleDrop(event)">
+      <div class="dz-icon">📂</div>
+      <div class="dz-title">Drop XML file here or click to browse</div>
+      <div class="dz-sub">Sportscode XML export (.xml) — UTF-16 LE encoding</div>
+      <div class="dz-file" id="dzFileName"></div>
+    </div>
+    <input type="file" id="xmlFile" accept=".xml" onchange="handleFileSelect(this)">
+
+    <div class="error-box" id="errorBox"></div>
+
+    <button class="process-btn" id="processBtn" onclick="processGame()" disabled>
+      ⚙ Generate Game Files
+    </button>
+
+    <!-- Progress -->
+    <div class="progress-block" id="progressBlock">
+      <div class="prog-msg" id="progMsg">Parsing XML…</div>
+      <div class="prog-bar-wrap"><div class="prog-bar" id="progBar" style="width:0%"></div></div>
+    </div>
+
+    <!-- Downloads -->
+    <div class="downloads" id="downloadsBlock">
+      <div class="dl-title">Files ready — download both:</div>
+      <a class="dl-btn" id="dlEvents" download>
+        ⬇ Game Events JSON
+      </a>
+      <a class="dl-btn" id="dlGames" download>
+        ⬇ Updated games.json
+      </a>
+      <div class="instructions">
+        <div class="inst-title">Upload to GitHub (2 minutes)</div>
+        <div class="inst-step"><div class="inst-n">1</div><div>Open your GitHub repository and navigate to the <code>games/</code> folder.</div></div>
+        <div class="inst-step"><div class="inst-n">2</div><div>Click <strong>Add file → Upload files</strong>. Drag both downloaded files in.</div></div>
+        <div class="inst-step"><div class="inst-n">3</div><div>When uploading <code>games.json</code>, it will ask to overwrite the existing file — confirm this.</div></div>
+        <div class="inst-step"><div class="inst-n">4</div><div>Click <strong>Commit changes</strong>. The new game will appear in the library within 60 seconds.</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Auth ──────────────────────────────────────────────────────
+const auth = sessionStorage.getItem('cohesion_auth');
+if(!auth) window.location.href = 'index.html';
+if(auth !== 'admin') window.location.href = 'library.html';
+function logout(){ sessionStorage.clear(); window.location.href = 'index.html'; }
+
+function syncColor(side, hex){
+  const clean = hex.trim();
+  if(/^#[0-9a-fA-F]{6}$/.test(clean)){
+    document.getElementById(side+'Color').value = clean;
+    document.getElementById(side+'ColorHex').style.borderColor = '';
+  } else {
+    document.getElementById(side+'ColorHex').style.borderColor = '#f44336';
+  }
+}
+// Sync colour picker → hex text field
+document.addEventListener('DOMContentLoaded', () => {
+  ['home','away'].forEach(side => {
+    const picker = document.getElementById(side+'Color');
+    const hex = document.getElementById(side+'ColorHex');
+    if(picker && hex){
+      picker.addEventListener('input', () => { hex.value = picker.value; });
+    }
+  });
+});
+
+// ── Theme ─────────────────────────────────────────────────────
+function initTheme(){
+  const t = localStorage.getItem('cohesion_theme')||'dark';
+  document.documentElement.setAttribute('data-theme',t);
+  document.getElementById('themeToggle').textContent = t==='dark'?'☀️':'🌙';
+}
+function toggleTheme(){
+  const c = document.documentElement.getAttribute('data-theme');
+  const n = c==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',n);
+  localStorage.setItem('cohesion_theme',n);
+  document.getElementById('themeToggle').textContent = n==='dark'?'☀️':'🌙';
+}
+initTheme();
+
+// ── ET toggle ─────────────────────────────────────────────────
+function toggleET(){
+  const show = document.getElementById('etCheck').checked;
+  document.getElementById('etFields').classList.toggle('show', show);
+}
+
+// ── File handling ─────────────────────────────────────────────
+let xmlFile = null;
+
+function handleFileSelect(input){
+  if(input.files[0]) setFile(input.files[0]);
+}
+function handleDrop(e){
+  e.preventDefault();
+  document.getElementById('dropZone').classList.remove('over');
+  const f = e.dataTransfer.files[0];
+  if(f && f.name.endsWith('.xml')) setFile(f);
+  else showError('Please drop a .xml file.');
+}
+function setFile(f){
+  xmlFile = f;
+  document.getElementById('dzFileName').textContent = '✓ ' + f.name;
+  document.getElementById('dropZone').classList.add('ready');
+  document.getElementById('processBtn').disabled = false;
+  hideError();
+}
+
+// ── Time parsing ──────────────────────────────────────────────
+function parseTime(str){
+  if(!str || !str.trim()) return null;
+  const parts = str.trim().split(':');
+  if(parts.length !== 2) return null;
+  const m = parseInt(parts[0]), s = parseInt(parts[1]);
+  if(isNaN(m)||isNaN(s)) return null;
+  return m*60+s;
+}
+
+// ── YouTube ID extraction ─────────────────────────────────────
+function extractYtId(url){
+  const m = url.match(/(?:youtu\.be\/|v=|embed\/)([A-Za-z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
+
+// ── Category ──────────────────────────────────────────────────
+function getCategory(code){
+  if(/SHOT|1 POINT|2 POINT|WIDE|GOAL|SAVE|BLOCKED|SHORT|WOODWORK/.test(code)) return 'Shots & Scores';
+  if(/KO/.test(code) && !/SCORE|ATTACK/.test(code)) return 'Kickouts';
+  if(/FOUL|CARD|TECHNICAL/.test(code)) return 'Fouls';
+  if(/TOs|TURNOVER/.test(code)) return 'Turnovers';
+  if(/TACKLE/.test(code)) return 'Tackles';
+  if(/ATTACKS|ENTRY|POSSESSION|SCORE SOURCE|SCORE ASSIST|SHOT SOURCE|SHOT ASSIST/.test(code)) return 'Possession & Attack';
+  if(/SUB/.test(code)) return 'Other';
+  return 'Player Actions';
+}
+
+function getGameTime(half, start, refs){
+  const refStart = refs[half] || 0;
+  const mins = (start - refStart) / 60;
+  const m = Math.floor(mins);
+  const s = Math.round((mins - m) * 60);
+  const prefix = half === '1st Half' ? '1H' : half === '2nd Half' ? '2H' :
+                 half === 'ET 1st Half' ? 'ET1' : 'ET2';
+  return `${prefix} ${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+// ── Error display ─────────────────────────────────────────────
+function showError(msg){
+  const b = document.getElementById('errorBox');
+  b.textContent = '⚠ ' + msg; b.classList.add('show');
+}
+function hideError(){
+  document.getElementById('errorBox').classList.remove('show');
+}
+function setProgress(pct, msg){
+  document.getElementById('progBar').style.width = pct+'%';
+  document.getElementById('progMsg').textContent = msg;
+}
+
+// ── MAIN PROCESS ──────────────────────────────────────────────
+async function processGame(){
+  hideError();
+  document.getElementById('downloadsBlock').classList.remove('show');
+
+  // Validate
+  const homeTeam    = document.getElementById('homeTeam').value.trim();
+  const awayTeam    = document.getElementById('awayTeam').value.trim();
+  const competition = document.getElementById('competition').value;
+  const round       = document.getElementById('round').value.trim();
+  const dateVal     = document.getElementById('gameDate').value;
+  const ytUrl       = document.getElementById('youtubeUrl').value.trim();
+  const t1Str       = document.getElementById('t1').value.trim();
+  const t2Str       = document.getElementById('t2').value.trim();
+  const hasET       = document.getElementById('etCheck').checked;
+  const tet1Str     = document.getElementById('tet1').value.trim();
+  const tet2Str     = document.getElementById('tet2').value.trim();
+
+  if(!homeTeam||!awayTeam){ showError('Please enter both team names.'); return; }
+  if(!competition){ showError('Please select a competition.'); return; }
+  if(!ytUrl){ showError('Please enter the YouTube video URL.'); return; }
+  if(!xmlFile){ showError('Please select an XML file.'); return; }
+
+  const ytId = extractYtId(ytUrl);
+  if(!ytId){ showError('Could not read YouTube video ID from that URL. Please use a standard YouTube or youtu.be link.'); return; }
+
+  const half1Video = parseTime(t1Str);
+  const half2Video = parseTime(t2Str);
+  if(half1Video === null || half2Video === null){ showError('Please enter valid start times in MM:SS format (e.g. 01:43).'); return; }
+
+  const et1Video = hasET ? parseTime(tet1Str) : null;
+  const et2Video = hasET ? parseTime(tet2Str) : null;
+  if(hasET && (et1Video===null||et2Video===null)){ showError('Please enter valid extra time start times.'); return; }
+
+  // Show progress
+  document.getElementById('progressBlock').classList.add('show');
+  document.getElementById('processBtn').disabled = true;
+  setProgress(10, 'Reading XML file…');
+
+  try{
+    // Read file as ArrayBuffer
+    const buffer = await xmlFile.arrayBuffer();
+    setProgress(25, 'Decoding XML…');
+
+    // Decode UTF-16 LE
+    let text;
+    try{
+      const decoder = new TextDecoder('utf-16le');
+      text = decoder.decode(buffer);
+      if(text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+    } catch(e){
+      const decoder = new TextDecoder('utf-8');
+      text = decoder.decode(buffer);
+    }
+
+    setProgress(40, 'Parsing events…');
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(text, 'text/xml');
+    if(doc.querySelector('parsererror')){ showError('Could not parse the XML file. Please check it is a valid Sportscode export.'); return; }
+
+    const instances = Array.from(doc.querySelectorAll('instance'));
+    setProgress(55, `Found ${instances.length} instances…`);
+
+    // Find half boundaries in XML
+    let xmlHalf1=null, xmlHalf2=null, xmlET1=null, xmlET2=null;
+    instances.forEach(inst=>{
+      const code = inst.querySelector('code')?.textContent?.trim()||'';
+      const start = parseFloat(inst.querySelector('start')?.textContent||0);
+      if(code==='1st Half' && xmlHalf1===null) xmlHalf1=start;
+      if(code==='2nd Half' && xmlHalf2===null) xmlHalf2=start;
+      if(code==='ET 1st Half' && xmlET1===null) xmlET1=start;
+      if(code==='ET 2nd Half' && xmlET2===null) xmlET2=start;
+    });
+
+    if(xmlHalf1===null){ showError('Could not find "1st Half" marker in the XML. Please check this is a Sportscode export.'); return; }
+    if(xmlHalf2===null){ showError('Could not find "2nd Half" marker in the XML.'); return; }
+
+    // Offsets
+    const offsets = {
+      '1st Half':    half1Video - xmlHalf1,
+      '2nd Half':    half2Video - xmlHalf2,
+      'ET 1st Half': et1Video !== null && xmlET1 !== null ? et1Video - xmlET1 : null,
+      'ET 2nd Half': et2Video !== null && xmlET2 !== null ? et2Video - xmlET2 : null,
+    };
+
+    // Refs for game time calculation
+    const xmlRefs = {
+      '1st Half': xmlHalf1,
+      '2nd Half': xmlHalf2,
+      'ET 1st Half': xmlET1,
+      'ET 2nd Half': xmlET2,
+    };
+
+    const SKIP = new Set(['THROW-IN','1st Half','2nd Half','ET 1st Half','ET 2nd Half','Count']);
+
+    setProgress(65, 'Processing events…');
+    const events = [];
+    instances.forEach(inst=>{
+      const code = inst.querySelector('code')?.textContent?.trim()||'';
+      if(SKIP.has(code)) return;
+
+      const start = parseFloat(inst.querySelector('start')?.textContent||0);
+      const end   = parseFloat(inst.querySelector('end')?.textContent||0);
+
+      // Labels
+      const labels = {};
+      inst.querySelectorAll('label').forEach(l=>{
+        const g = l.querySelector('group')?.textContent?.trim()||'NO_GROUP';
+        const t = l.querySelector('text')?.textContent?.trim()||'';
+        if(t) labels[g] = t;
+      });
+
+      // Half
+      let half = '1st Half';
+      if(xmlET2!==null && start>=xmlET2) half='ET 2nd Half';
+      else if(xmlET1!==null && start>=xmlET1) half='ET 1st Half';
+      else if(xmlHalf2!==null && start>=xmlHalf2) half='2nd Half';
+
+      // Video timestamp
+      const offset = offsets[half]||0;
+      const driveT = Math.max(0, Math.round(start + offset) - 2);
+
+      const team = labels['Team Name'] || (code.includes('MAYO')?'MAYO': code.includes('LONDON')?'LONDON':'');
+      const player = labels['Mayo Player Labels'] || labels['NO_GROUP'] || '';
+      const outcome = labels['Shot Outcomes'] || labels['Game Involvement Outcomes'] ||
+                      labels['Kickout Outcomes'] || labels['Turnover Outcomes'] ||
+                      labels['Tackle Outcomes'] || '';
+      const subtype = labels['Deadball Shot Type'] || labels['Shot Zones'] ||
+                      labels['Kickout Locations'] || '';
+
+      events.push({
+        id: inst.querySelector('ID')?.textContent?.trim()||String(events.length+1),
+        start: Math.round(start),
+        end: Math.round(end),
+        half,
+        gameTime: getGameTime(half, start, xmlRefs),
+        code,
+        team,
+        player,
+        outcome,
+        subtype,
+        category: getCategory(code),
+        driveT,
+      });
+    });
+
+    setProgress(80, 'Generating files…');
+
+    // Build game ID
+    const safeHome = homeTeam.toLowerCase().replace(/[^a-z0-9]/g,'-');
+    const safeAway = awayTeam.toLowerCase().replace(/[^a-z0-9]/g,'-');
+    const safeComp = competition.toLowerCase().replace(/[^a-z0-9]/g,'-').replace(/-+/g,'-');
+    const year     = dateVal ? dateVal.slice(0,4) : new Date().getFullYear();
+    const gameId   = `${safeHome}-${safeAway}-${year}-${safeComp}`;
+
+    // Game metadata entry
+    const gameMeta = {
+      id: gameId,
+      title: `${homeTeam} v ${awayTeam}`,
+      date: dateVal || new Date().toISOString().slice(0,10),
+      competition,
+      round,
+      homeTeam,
+      awayTeam,
+      homeColor: document.getElementById('homeColor').value,
+      awayColor: document.getElementById('awayColor').value,
+      youtubeId: ytId,
+      half1Start: half1Video,
+      half2Start: half2Video,
+      et1Start: et1Video,
+      et2Start: et2Video,
+      thumbnail: `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`,
+      eventCount: events.length,
+    };
+
+    // Create downloads
+    const eventsBlob = new Blob([JSON.stringify(events)], {type:'application/json'});
+    const eventsUrl  = URL.createObjectURL(eventsBlob);
+
+    // For games.json we provide the new entry — user will need to add to existing file
+    // We generate a stub showing what to add
+    const newGamesEntry = JSON.stringify({games:[gameMeta]}, null, 2);
+    const gamesBlob = new Blob([newGamesEntry], {type:'application/json'});
+    const gamesUrl  = URL.createObjectURL(gamesBlob);
+
+    setProgress(100, `Done — ${events.length} events processed.`);
+
+    document.getElementById('dlEvents').href     = eventsUrl;
+    document.getElementById('dlEvents').download = `${gameId}.json`;
+    document.getElementById('dlGames').href      = gamesUrl;
+    document.getElementById('dlGames').download  = `${gameId}_meta.json`;
+
+    // Update instructions for games.json merging
+    document.querySelector('.dl-btn:last-of-type + .instructions .inst-step:last-child div:last-child').innerHTML =
+      `The metadata file contains the entry to add to your <code>games/games.json</code> inside the <code>"games": [...]</code> array. Open <code>games.json</code> in GitHub, click the pencil icon to edit, paste the new entry into the array, and commit.`;
+
+    document.getElementById('downloadsBlock').classList.add('show');
+
+  } catch(err){
+    showError('An error occurred: ' + err.message);
+    console.error(err);
+  } finally{
+    document.getElementById('processBtn').disabled = false;
+  }
+}
+</script>
+</body>
+</html>

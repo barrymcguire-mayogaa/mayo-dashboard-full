@@ -1,0 +1,22 @@
+{
+  "games": [
+    {
+      "id": "mayo-london-2026-csfc-qf",
+      "title": "Mayo v London",
+      "date": "2026-04-18",
+      "competition": "Connacht SFC",
+      "round": "Quarter-Final",
+      "homeTeam": "Mayo",
+      "awayTeam": "London",
+      "homeColor": "#0B2447",
+      "awayColor": "#22C55E",
+      "youtubeId": "VPHDlJY49u0",
+      "half1Start": 103,
+      "half2Start": 2289,
+      "et1Start": null,
+      "et2Start": null,
+      "thumbnail": "https://img.youtube.com/vi/VPHDlJY49u0/hqdefault.jpg",
+      "eventCount": 1249
+    }
+  ]
+}
