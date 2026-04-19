@@ -21,6 +21,7 @@
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 html,body{height:100%;overflow:hidden;}
+@media(max-width:767px){html,body{height:auto;overflow-y:auto;}}
 body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--t1);display:flex;flex-direction:column;transition:background .2s,color .2s;}
 header{height:50px;background:var(--panel);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 14px;gap:10px;flex-shrink:0;z-index:100;}
 .back-btn{display:flex;align-items:center;gap:4px;padding:4px 9px;border-radius:6px;font:700 11px 'Barlow Condensed',sans-serif;letter-spacing:.5px;color:var(--t2);border:1px solid var(--border);background:var(--card);text-decoration:none;transition:all .15s;flex-shrink:0;}
@@ -161,10 +162,11 @@ canvas#tlC{display:block;width:100%;cursor:crosshair;}
 .spin{width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:sp .7s linear infinite;}
 @keyframes sp{to{transform:rotate(360deg);}}
 @media(max-width:767px){
-  main{grid-template-columns:1fr;grid-template-rows:auto 1fr;overflow:auto;}
-  .right-panel{border-bottom:1px solid var(--border);}
+  main{display:flex;flex-direction:column;overflow:visible;height:auto;}
+  .right-panel{order:-1;border-bottom:1px solid var(--border);}
+  .left-panel{border-right:none;height:auto;display:flex;flex-direction:column;}
+  .event-scroller{overflow-y:visible;flex:none;}
   .now-playing,.nearby,.idle,.tl-section{display:none;}
-  .left-panel{border-right:none;height:60vh;}
   .drag-handle{display:none;}
   .game-title{display:none;}
 }
@@ -511,6 +513,23 @@ function updatePH(t){
 }
 function tc(s){if(!s)return'';return s.toLowerCase().replace(/\b[a-z]/g,c=>c.toUpperCase());}
 function fmt(s){s=Math.round(s);return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
+// ── Auto fullscreen on landscape rotation (mobile only) ──────────
+window.addEventListener('orientationchange',function(){
+  setTimeout(function(){
+    // Only trigger on portrait-width devices
+    if(Math.min(screen.width,screen.height)>900)return;
+    const isLand=window.innerWidth>window.innerHeight;
+    const va=document.getElementById('VA');
+    if(!va)return;
+    if(isLand){
+      const rfs=va.requestFullscreen||va.webkitRequestFullscreen||va.mozRequestFullScreen;
+      if(rfs)rfs.call(va).catch(function(){});
+    } else {
+      const ef=document.exitFullscreen||document.webkitExitFullscreen;
+      if(ef&&(document.fullscreenElement||document.webkitFullscreenElement))ef.call(document).catch(function(){});
+    }
+  },250);
+});
 loadGame();
 </script>
 </body>
