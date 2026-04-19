@@ -133,6 +133,57 @@ select option{background:var(--card);}
 }
 .card-events b{color:var(--t2);}
 
+/* DELETE BUTTON */
+.card-del{
+  position:absolute;top:8px;right:8px;z-index:2;
+  width:28px;height:28px;border-radius:50%;
+  background:rgba(220,38,38,0.82);backdrop-filter:blur(4px);
+  border:1.5px solid rgba(255,255,255,0.2);
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-size:15px;line-height:1;cursor:pointer;
+  opacity:0;transition:opacity .15s,background .15s,transform .1s;
+}
+.game-card:hover .card-del{opacity:1;}
+.card-del:hover{background:#dc2626;transform:scale(1.1);}
+
+/* CONFIRM MODAL */
+.modal-bg{
+  position:fixed;inset:0;background:rgba(0,0,0,0.55);backdrop-filter:blur(3px);
+  display:flex;align-items:center;justify-content:center;
+  z-index:200;opacity:0;pointer-events:none;transition:opacity .18s;
+}
+.modal-bg.show{opacity:1;pointer-events:all;}
+.modal{
+  background:var(--panel);border:1px solid var(--border);border-radius:14px;
+  padding:28px 28px 24px;max-width:380px;width:calc(100% - 40px);
+  box-shadow:0 24px 64px rgba(0,0,0,0.55);
+  transform:translateY(8px);transition:transform .18s;
+}
+.modal-bg.show .modal{transform:translateY(0);}
+.modal-icon{font-size:28px;margin-bottom:12px;}
+.modal-title{font:800 18px 'Barlow Condensed',sans-serif;letter-spacing:.5px;margin-bottom:8px;}
+.modal-body{font-size:13px;color:var(--t2);margin-bottom:8px;line-height:1.6;}
+.modal-body strong{color:var(--t1);}
+.modal-note{font-size:11px;color:var(--t3);margin-bottom:22px;line-height:1.6;}
+.modal-note code{background:var(--card);border:1px solid var(--border);border-radius:3px;padding:1px 5px;font-size:10px;color:var(--accent);}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end;}
+.mbtn{padding:8px 18px;border-radius:7px;font:700 11px 'Barlow Condensed',sans-serif;letter-spacing:.6px;cursor:pointer;transition:all .15s;}
+.mbtn-cancel{border:1px solid var(--border);background:var(--card);color:var(--t2);}
+.mbtn-cancel:hover{border-color:var(--t2);color:var(--t1);}
+.mbtn-delete{border:none;background:#dc2626;color:#fff;}
+.mbtn-delete:hover{background:#b91c1c;}
+
+/* TOAST */
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--panel);border:1px solid var(--border);border-radius:9px;
+  padding:10px 18px;font:600 12px 'Barlow Condensed',sans-serif;letter-spacing:.4px;
+  color:var(--t1);box-shadow:0 8px 24px rgba(0,0,0,0.35);
+  opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;z-index:300;
+  white-space:nowrap;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
 /* EMPTY */
 .empty-state{
   text-align:center;padding:60px 20px;color:var(--t3);
@@ -193,6 +244,21 @@ select option{background:var(--card);}
     Loading games…
   </div>
 </div>
+
+<!-- Delete confirmation modal -->
+<div class="modal-bg" id="delModal">
+  <div class="modal">
+    <div class="modal-icon">🗑</div>
+    <div class="modal-title">Remove Game?</div>
+    <div class="modal-body">This will remove <strong id="delGameName"></strong> from the library.</div>
+    <div class="modal-note">A updated <code>games.json</code> will download automatically. Upload it to the <code>games/</code> folder on GitHub to make the change permanent.</div>
+    <div class="modal-btns">
+      <button class="mbtn mbtn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="mbtn mbtn-delete" onclick="confirmDelete()">Remove Game</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
 
 <script>
 // ── Auth ──────────────────────────────────────────────────────
@@ -294,6 +360,7 @@ function renderGames(games){
           <div class="card-thumb-overlay">
             <div class="card-competition">${g.competition}</div>
           </div>
+          ${auth==='admin'?`<button class="card-del" title="Remove game" onclick="startDelete('${g.id}',event)">✕</button>`:''}
         </div>
         <div class="card-body">
           <div class="card-teams">
@@ -311,6 +378,56 @@ function renderGames(games){
       <div class="game-grid">${cards}</div>`;
   }).join('');
 }
+
+// ── Delete / Modal / Toast ────────────────────────────────────
+let pendingDeleteId = null;
+
+function startDelete(id, e){
+  e.preventDefault();
+  e.stopPropagation();
+  const g = allGames.find(x=>x.id===id);
+  if(!g) return;
+  pendingDeleteId = id;
+  document.getElementById('delGameName').textContent = `${g.homeTeam} v ${g.awayTeam} (${g.date?g.date.slice(0,4):''})`;
+  document.getElementById('delModal').classList.add('show');
+}
+function closeModal(){
+  document.getElementById('delModal').classList.remove('show');
+  pendingDeleteId = null;
+}
+function confirmDelete(){
+  if(!pendingDeleteId) return;
+  allGames = allGames.filter(g=>g.id!==pendingDeleteId);
+  closeModal();
+  // Rebuild filters from scratch with updated list
+  const fTeam=document.getElementById('fTeam'),fYear=document.getElementById('fYear');
+  fTeam.innerHTML='<option value="">All Teams</option>';
+  fYear.innerHTML='<option value="">All Years</option>';
+  buildTeamFilter(allGames);
+  buildYearFilter(allGames);
+  applyFilters();
+  downloadGamesJson();
+  showToast('Game removed. Upload the downloaded games.json to GitHub to make it permanent.');
+}
+function downloadGamesJson(){
+  const blob = new Blob([JSON.stringify({games:allGames},null,2)],{type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'games.json';
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),5000);
+}
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),4500);
+}
+// Close modal on backdrop click
+document.getElementById('delModal').addEventListener('click',function(e){
+  if(e.target===this)closeModal();
+});
+// Close modal on Escape
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
 
 async function loadGames(){
   try{
