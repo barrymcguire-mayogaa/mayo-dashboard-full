@@ -143,7 +143,6 @@ code{background:var(--card);border:1px solid var(--border);border-radius:4px;pad
 }
 .src-badge.sportscode{background:var(--accent-bg);border:1px solid var(--accent);color:var(--accent);}
 .src-badge.gaelictracker{background:rgba(168,85,247,0.12);border:1px solid #a855f7;color:#a855f7;}
-.missing-row{display:none;margin-top:10px;}
 
 /* ERROR */
 .error-box{
@@ -274,15 +273,7 @@ code{background:var(--card);border:1px solid var(--border);border-radius:4px;pad
         </div>
       </div>
     </div>
-    <div class="help" id="timingHelp">Find these times by opening the video in YouTube and noting when the referee throws in the ball at the start of each period.</div>
-
-    <div class="missing-row" id="missingRow">
-      <div class="field" style="max-width:200px;">
-        <label>Footage Missing From Start (seconds)</label>
-        <input type="text" id="missingFootage" placeholder="e.g. 50" value="0">
-        <div class="help">How many seconds of the 1st half are missing from the beginning of the video? The video seek will be adjusted automatically.</div>
-      </div>
-    </div>
+    <div class="help">Find these times by opening the video in YouTube and noting when the referee throws in the ball at the start of each period. If footage is missing from the start of the video, enter a <strong>negative 1st half time</strong> — e.g. if 50 seconds of game are missing, enter <code>-00:50</code>. Events before that point will clamp to the video start; everything after will align correctly.</div>
   </div>
 
   <!-- STEP 3: XML Upload & Process -->
@@ -416,9 +407,6 @@ async function setFile(f){
     badge.className = 'src-badge gaelictracker';
     badge.textContent = '📱 Gaelic Tracker — auto-filling details…';
     badge.style.display = 'inline-flex';
-    document.getElementById('missingRow').style.display = 'block';
-    document.getElementById('timingHelp').innerHTML =
-      '<strong>Gaelic Tracker:</strong> Enter the video time when the <strong>1st half throw-in</strong> occurs. For the 2nd half, find when the throw-in happens in the video. If footage is missing from the start, enter how many seconds below.';
     try{
       const text = await f.text();
       gtData = JSON.parse(text);
@@ -432,9 +420,6 @@ async function setFile(f){
     badge.className = 'src-badge sportscode';
     badge.textContent = '🎬 Sportscode XML';
     badge.style.display = 'inline-flex';
-    document.getElementById('missingRow').style.display = 'none';
-    document.getElementById('timingHelp').textContent =
-      'Find these times by opening the video in YouTube and noting when the referee throws in the ball at the start of each period.';
     gtData = null;
   }
 }
@@ -467,13 +452,15 @@ function prefillFromGT(d){
 }
 
 // ── Time parsing ──────────────────────────────────────────────
+// Accepts MM:SS or -MM:SS (negative = game started before video)
 function parseTime(str){
   if(!str || !str.trim()) return null;
-  const parts = str.trim().split(':');
+  const neg = str.trim().startsWith('-');
+  const parts = str.trim().replace(/^-/,'').split(':');
   if(parts.length !== 2) return null;
   const m = parseInt(parts[0]), s = parseInt(parts[1]);
   if(isNaN(m)||isNaN(s)) return null;
-  return m*60+s;
+  return (neg ? -1 : 1) * (m*60+s);
 }
 
 // ── YouTube ID extraction ─────────────────────────────────────
@@ -539,7 +526,7 @@ function gtParseTime(str){ // "MM:SS" → seconds
   const [m,s] = (str||'0:0').split(':').map(Number);
   return (m||0)*60+(s||0);
 }
-function processGaelicTracker(d, half1Video, half2Video, missingFromStart){
+function processGaelicTracker(d, half1Video, half2Video){
   const P2_CLOCK_START = 1800; // GAA 2nd-half clock starts at 30:00
   const events = [];
   const timeline = [...(d.timeline||[])].reverse(); // sort oldest-first
@@ -549,7 +536,7 @@ function processGaelicTracker(d, half1Video, half2Video, missingFromStart){
     let driveT, half, gameTimeStr;
     if(item.period === 1){
       half = '1st Half';
-      driveT = half1Video + gameSeconds - missingFromStart;
+      driveT = half1Video + gameSeconds; // half1Video is negative if footage missing
       const m=Math.floor(gameSeconds/60), s=gameSeconds%60;
       gameTimeStr = `1H ${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
     } else {
@@ -626,10 +613,9 @@ async function processGame(){
     // ── Gaelic Tracker JSON ──────────────────────────────────
     if(fileSource === 'gaelictracker'){
       setProgress(20, 'Reading Gaelic Tracker data…');
-      const missing = parseInt(document.getElementById('missingFootage').value)||0;
       const data = gtData || JSON.parse(await xmlFile.text());
       setProgress(60, `Processing ${data.timeline?.length||0} timeline events…`);
-      events = processGaelicTracker(data, half1Video, half2Video, missing);
+      events = processGaelicTracker(data, half1Video, half2Video);
       setProgress(80, 'Generating files…');
 
     // ── Sportscode XML ───────────────────────────────────────
