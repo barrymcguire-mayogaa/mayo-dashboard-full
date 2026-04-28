@@ -143,6 +143,7 @@ code{background:var(--card);border:1px solid var(--border);border-radius:4px;pad
 }
 .src-badge.sportscode{background:var(--accent-bg);border:1px solid var(--accent);color:var(--accent);}
 .src-badge.gaelictracker{background:rgba(168,85,247,0.12);border:1px solid #a855f7;color:#a855f7;}
+.src-badge.gaelicinsights{background:rgba(16,185,129,0.12);border:1px solid #10b981;color:#10b981;}
 
 /* ANGLE ROWS */
 .angle-row{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px;}
@@ -180,7 +181,7 @@ code{background:var(--card);border:1px solid var(--border);border-radius:4px;pad
 <div class="page">
   <div class="page-title">Add New Game</div>
   <div class="page-sub">
-    Supports <strong>Hudl Sportscode XML</strong>, <strong>GIU XML</strong> and <strong>Gaelic Tracker JSON</strong> exports.
+    Supports <strong>Hudl Sportscode XML</strong>, <strong>GIU XML</strong>, <strong>Gaelic Insights XML</strong> and <strong>Gaelic Tracker JSON</strong> exports.
     Fill in the game details, enter the video start times, then upload your file.
     Gaelic Tracker files will auto-fill teams, colours and date automatically.
   </div>
@@ -306,7 +307,7 @@ code{background:var(--card);border:1px solid var(--border);border-radius:4px;pad
       <div class="step-num">3</div>
       <div>
         <div class="step-title">Upload Match Data File</div>
-        <div class="step-sub">Sportscode XML, GIU XML <em>or</em> Gaelic Tracker JSON — auto-detected</div>
+        <div class="step-sub">Sportscode XML, GIU XML, Gaelic Insights XML <em>or</em> Gaelic Tracker JSON — auto-detected</div>
       </div>
     </div>
 
@@ -317,7 +318,7 @@ code{background:var(--card);border:1px solid var(--border);border-radius:4px;pad
          ondrop="handleDrop(event)">
       <div class="dz-icon">📂</div>
       <div class="dz-title">Drop file here or click to browse</div>
-      <div class="dz-sub">Sportscode / GIU <code>.xml</code> &nbsp;or&nbsp; Gaelic Tracker <code>.json</code></div>
+      <div class="dz-sub">Sportscode / GIU / Gaelic Insights <code>.xml</code> &nbsp;or&nbsp; Gaelic Tracker <code>.json</code></div>
       <div class="dz-file" id="dzFileName"></div>
       <div id="srcBadge" style="display:none;" class="src-badge"></div>
     </div>
@@ -490,7 +491,7 @@ async function setFile(f){
     }
   } else {
     badge.className = 'src-badge sportscode';
-    badge.textContent = '🎬 Sportscode / GIU XML';
+    badge.textContent = '🎬 Sportscode / GIU / Gaelic Insights XML';
     badge.style.display = 'inline-flex';
     gtData = null;
   }
@@ -723,13 +724,17 @@ async function processGame(){
         return '';
       }
 
-      // Auto-detect GIU format: uses <ALL_INSTANCES> and P1 START / P3 START codes
-      const isGIU = !!doc.querySelector('ALL_INSTANCES') ||
-                    instances.some(i=>/^P\d START$/.test((i.querySelector('code')?.textContent||'').trim()));
+      // Auto-detect XML format: GIU uses <ALL_INSTANCES> WITH P1/P2 START markers;
+      // Gaelic Insights uses <ALL_INSTANCES> WITHOUT period markers; Sportscode has neither.
+      const hasAllInstances = !!doc.querySelector('ALL_INSTANCES');
+      const hasPeriodMarkers = instances.some(i=>/^P[12] START$/.test((i.querySelector('code')?.textContent||'').trim()));
+      let xmlFormat = 'sportscode';
+      if(hasAllInstances && hasPeriodMarkers) xmlFormat = 'giu';
+      else if(hasAllInstances) xmlFormat = 'gaelic-insights';
 
       setProgress(65, 'Processing events…');
 
-      if(isGIU){
+      if(xmlFormat === 'giu'){
         // ── GIU XML format ──────────────────────────────────────
         document.getElementById('srcBadge').textContent = '📊 GIU XML';
 
@@ -795,6 +800,86 @@ async function processGame(){
             code, team:giuTeam(code), player:labels['Player']||'',
             outcome, subtype,
             category:giuCategory(code), driveT, labels,
+          });
+        });
+
+      } else if(xmlFormat === 'gaelic-insights'){
+        // ── Gaelic Insights XML format ──────────────────────────
+        const badge = document.getElementById('srcBadge');
+        badge.className = 'src-badge gaelicinsights';
+        badge.textContent = '📊 Gaelic Insights XML';
+
+        // Each event ID appears multiple times — once per label group.
+        // Group by ID first so we get one merged event object per play.
+        const giMap = new Map();
+        instances.forEach(inst=>{
+          const id   = (inst.querySelector('ID')?.textContent||'').trim();
+          const code = (inst.querySelector('code')?.textContent||'').trim();
+          if(!id || code === 'NA Whistle') return;
+          if(!giMap.has(id)){
+            giMap.set(id,{
+              id,
+              start: parseFloat(inst.querySelector('start')?.textContent||0),
+              end:   parseFloat(inst.querySelector('end')?.textContent||0),
+              code,
+              labels: {}
+            });
+          }
+          // Each <instance> carries exactly one <label>
+          const lbl = inst.querySelector('label');
+          if(lbl){
+            const grp = (lbl.querySelector('group')?.textContent||'').trim();
+            const txt = (lbl.querySelector('text')?.textContent||'').trim();
+            if(grp && txt) giMap.get(id).labels[grp] = txt;
+          }
+        });
+
+        function giTeam(code){
+          if(code.toLowerCase().startsWith(homeTeam.toLowerCase())) return homeTeam.toUpperCase();
+          if(code.toLowerCase().startsWith(awayTeam.toLowerCase())) return awayTeam.toUpperCase();
+          return '';
+        }
+        function giCategory(code){
+          const cu = code.toUpperCase();
+          if(/SHOT/.test(cu))     return 'Shots & Scores';
+          if(/KICKOUT/.test(cu))  return 'Kickouts';
+          if(/TURNOVER/.test(cu)) return 'Turnovers';
+          return 'Player Actions';
+        }
+
+        // Sort by video timestamp before pushing to events
+        const giSorted = [...giMap.values()].sort((a,b)=>a.start-b.start);
+        giSorted.forEach(ev=>{
+          const { id, start, end, code, labels } = ev;
+
+          // Half assignment: raw video timestamp vs user-entered half2Video
+          const half    = start >= half2Video ? '2nd Half' : '1st Half';
+          const halfRef = half === '2nd Half' ? half2Video : half1Video;
+          const relSecs = Math.max(0, Math.round(start - halfRef));
+          const gm = Math.floor(relSecs/60), gs = relSecs%60;
+          const gameTimeStr = `${half==='2nd Half'?'2H':'1H'} ${String(gm).padStart(2,'0')}:${String(gs).padStart(2,'0')}`;
+
+          const driveT  = Math.max(0, Math.round(start) - 2);
+          const team    = giTeam(code);
+          const player  = labels['Player']      || '';
+          const outcome = labels['Outcome']     || '';
+          const subtype = labels['Description'] || labels['Kickout_Length'] || '';
+
+          // Map raw label keys to clean COHESION label names
+          const cleanLabels = {};
+          if(labels['Assist'])         cleanLabels['Assist']         = labels['Assist'];
+          if(labels['Description'])    cleanLabels['Description']    = labels['Description'];
+          if(labels['Outcome'])        cleanLabels['Outcome']        = labels['Outcome'];
+          if(labels['PO_Result'])      cleanLabels['KickoutOutcome'] = labels['PO_Result'];
+          if(labels['Kickout_Length']) cleanLabels['KickoutLength']  = labels['Kickout_Length'];
+          if(labels['turnover_zone'])  cleanLabels['TurnoverZone']   = labels['turnover_zone'];
+          if(labels['Source'])         cleanLabels['Source']         = labels['Source'];
+
+          events.push({
+            id, start:Math.round(start), end:Math.round(end),
+            half, gameTime:gameTimeStr,
+            code, team, player, outcome, subtype,
+            category:giCategory(code), driveT, labels:cleanLabels,
           });
         });
 
