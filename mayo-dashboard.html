@@ -2197,6 +2197,7 @@ const OPP_KO_PERIOD_DATA={
   "Rd.6":[[6,3,3],[3,3,0],[3,3,0],[4,3,1],[5,4,1],[6,5,1]],
   "Rd.7":[[3,3,0],[6,4,2],[8,7,1],[7,3,4],[3,3,0],[5,5,0]],
   "CSFC QF":[[5,4,1],[4,1,3],[7,3,4],[4,4,0],[4,3,1],[5,2,3]],
+  "CSFC SF":[[7,5,2],[4,2,2],[4,3,1],[3,3,0],[3,3,0],[7,5,2]],
 };
 
 // ── Turnover data per 12-min period (extracted from XML) ─────────────────────
@@ -2209,6 +2210,7 @@ const TURNOVER_PERIOD_DATA={
   "Rd.6":{mayo:[7,5,3,5,3,6], opp:[8,2,3,2,7,7]},
   "Rd.7":{mayo:[5,5,1,2,4,6], opp:[6,9,5,6,3,5]},
   "CSFC QF":{mayo:[3,4,3,3,3,4], opp:[6,6,8,6,5,3]},
+  "CSFC SF":{mayo:[4,5,4,6,4,5], opp:[7,6,2,2,1,5]},
 };
 
 // ── Foul data per 12-min period (extracted from XML) ──────────────────────────
@@ -2221,6 +2223,7 @@ const FOUL_PERIOD_DATA={
   "Rd.6":{mayo:[3,3,0,2,2,1],opp:[1,1,0,2,3,6]},
   "Rd.7":{mayo:[3,4,1,1,2,1],opp:[2,3,4,0,1,1]},
   "CSFC QF":{mayo:[3,3,2,3,3,3],opp:[4,4,3,4,4,4]},
+  "CSFC SF":{mayo:[0,2,2,2,4,2], opp:[2,1,2,0,0,6]},
 };
 
 // ── Tackle data per 12-min period (extracted from XML — MAYO TACKLE events, injury time folded into P6) ──
@@ -2233,6 +2236,7 @@ const TACKLE_PERIOD_DATA={
   "Rd.6":[17,19,12,7,7,5],
   "Rd.7":[24,16,6,5,4,10],
   "CSFC QF":[27,19,18,14,12,6],
+  "CSFC SF":[18,18,10,25,23,15],
 };
 
 // ── Per-player tackle counts per round (from MAYO TACKLE XML events) ──────────
@@ -2245,6 +2249,7 @@ const TACKLE_COUNTS_PER_PLAYER={
   "Rd.6":{"Ryan O'Donoghue":9,"Kobe McDonald":7,"Jack Coyne":6,"Rory Brickenden":6,"Sam Callinan":4,"Jordan Flynn":4,"Conal Dawson":3,"David McBrien":3,"Diarmuid O'Connor":3,"Jack Carney":3,"Darragh Beirne":3,"Seán Morahan":3,"Fergal Boland":2,"Bob Tuohy":2,"Donnacha McHugh":2,"Diarmuid Duffy":2,"Stephen Coen":1,"Aidan O'Shea":1,"Cillian O'Connor":1},
   "Rd.7":{"David McBrien":8,"Jack Carney":7,"Michael Plunkett":6,"Sam Callinan":6,"Jack Coyne":6,"Seamus Howard":6,"Diarmuid Duffy":5,"Paul Towey":4,"Ryan O'Donoghue":3,"John MacMonagle":3,"Rory Brickenden":2,"Aidan O'Shea":2,"Jordan Flynn":2,"Cian McHale":2,"Cillian O'Connor":2,"Hugh O'Loughlin":1},
   "CSFC QF":{"Sam Callinan":16,"Michael Plunkett":10,"David McBrien":9,"Jack Carney":8,"Paul Towey":8,"Aidan O'Shea":8,"Paddy Durcan":6,"Fenton Kelly":6,"Ryan O'Donoghue":5,"Hugh O'Loughlin":5,"Bob Tuohy":4,"Jordan Flynn":4,"Rory Brickenden":3,"Jack Coyne":3,"Cian McHale":1},
+  "CSFC SF":{"Enda Hession":12,"Jordan Flynn":11,"Jack Coyne":10,"Sam Callinan":9,"David McBrien":8,"Jack Carney":8,"Conor Loftus":6,"Ryan O'Donoghue":6,"Cian McHale":5,"Aidan O'Shea":4,"Rory Brickenden":4,"Kobe McDonald":3,"Tommy Conroy":3,"Paddy Durcan":2,"Bob Tuohy":2,"Donnacha McHugh":2,"Matthew Ruane":2,"Cillian O'Connor":1},
 };
 
 // ── KO wins per player — from 'Kickout Won' label, timestamp-matched to KO events ──
