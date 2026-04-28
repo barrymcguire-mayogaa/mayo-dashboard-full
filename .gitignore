@@ -22,3 +22,13 @@ Team Sheets/
 
 # Claude Code project files — local only
 .claude/
+
+# Backup files
+*.bak
+
+# Cohesion Analysis files — belong in barrymcguire-mayogaa/cohesion-analysis only
+# If any of these appear here, they must NOT be committed to this repo
+admin.html
+dashboard.html
+library.html
+games/
