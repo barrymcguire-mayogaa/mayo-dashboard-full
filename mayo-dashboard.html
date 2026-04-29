@@ -1251,48 +1251,41 @@ const SHOT_META={
 
 // ── Season Score Sources (from PDF analysis) ──────────────────────────────────
 const SCORE_SOURCES={
-  mayo:[
-    {source:'Turnover',goals:5,twopt:14,onept:49,shots:71,eff:96,total:68,pct:56},
-    {source:'Own KO',goals:3,twopt:5,onept:24,shots:34,eff:94,total:32,pct:26},
-    {source:'Opp KO',goals:4,twopt:5,onept:12,shots:23,eff:91,total:21,pct:17},
-  ],
-  opp:[
-    {source:'Turnover',goals:1,twopt:7,onept:46,shots:55,eff:98,total:54,pct:48},
-    {source:'Own KO',goals:7,twopt:4,onept:27,shots:39,eff:97,total:38,pct:34},
-    {source:'Opp KO',goals:2,twopt:4,onept:14,shots:20,eff:100,total:20,pct:18},
-  ],
-  perRound:[
-    {round:'Rd.1',opp:'Galway', mayo:{to:11,ownKO:2,oppKO:3},opp:{to:9,ownKO:2,oppKO:5}},
-    {round:'Rd.2',opp:'Dublin', mayo:{to:11,ownKO:5,oppKO:1},opp:{to:5,ownKO:4,oppKO:1}},
-    {round:'Rd.3',opp:'Donegal',mayo:{to:5,ownKO:5,oppKO:3},opp:{to:12,ownKO:5,oppKO:2}},
-    {round:'Rd.4',opp:'Monaghan',mayo:{to:16,ownKO:5,oppKO:4},opp:{to:8,ownKO:4,oppKO:0}},
-    {round:'Rd.5',opp:'Armagh', mayo:{to:6,ownKO:5,oppKO:4},opp:{to:7,ownKO:6,oppKO:6}},
-    {round:'Rd.6',opp:'Kerry',  mayo:{to:5,ownKO:2,oppKO:1},opp:{to:10,ownKO:10,oppKO:5}},
-    {round:'Rd.7',opp:'Roscommon',mayo:{to:14,ownKO:8,oppKO:5},opp:{to:3,ownKO:7,oppKO:1}},
-    {round:'CSFC QF',opp:'London',   mayo:{to:6,ownKO:9,oppKO:8},opp:{to:7,ownKO:3,oppKO:1}},
-    {round:'CSFC SF',opp:'Roscommon',mayo:{to:6,ownKO:5,oppKO:4},opp:{to:4,ownKO:8,oppKO:12}},
-  ]
+  mayo:{
+    to:{goals:6,twopt:15,onept:54,shots:118,eff:64,total:75,pct:44},
+    ownKO:{goals:3,twopt:6,onept:39,shots:94,eff:51,total:48,pct:28},
+    oppKO:{goals:4,twopt:9,onept:22,shots:69,eff:51,total:35,pct:21},
+    freeWon:{goals:0,twopt:3,onept:6,shots:11,eff:82,total:9,pct:5},
+    throwIn:{goals:0,twopt:0,onept:2,shots:3,eff:67,total:2,pct:1},
+  },
+  opp:{
+    to:{goals:2,twopt:8,onept:50,shots:92,eff:65,total:60,pct:40},
+    ownKO:{goals:8,twopt:6,onept:36,shots:85,eff:59,total:50,pct:33},
+    oppKO:{goals:3,twopt:4,onept:26,shots:55,eff:60,total:33,pct:22},
+    freeWon:{goals:0,twopt:3,onept:3,shots:6,eff:100,total:6,pct:4},
+    throwIn:{goals:0,twopt:0,onept:2,shots:4,eff:50,total:2,pct:1},
+  },
 };
 
 // ── 12-Minute Period Splits (from PDF analysis) ───────────────────────────────
 const PERIOD_SPLITS={
-  periods:['0–12','12–24','24–35','35–47','47–59','59–70'],
-  mayo:[26,15,22,24,24,17],
-  opp:[17,24,14,21,25,14],
+  mayo:[39,36,37,34,35,49],
+  opp:[22,28,23,29,44,55],
+  mayoTotal:230,oppTotal:201,
 };
 
 // ── Turnover Zones (from PDF analysis) ───────────────────────────────────────
 const TURNOVER_ZONES={
-  mayo:{total:208,attacking:104,attackingPct:50,middle:81,middlePct:39,defensive:14,defensivePct:7},
-  opp:{total:230,attacking:82,attackingPct:36,middle:103,middlePct:45,defensive:17,defensivePct:7},
-  atImpact:{total:44,from:104,pct:42,goals:2,twopt:5,onept:37,scoreValue:53}
+  mayo:{total:256,attacking:117,attackingPct:46,middle:120,middlePct:47,defensive:19,defensivePct:7},
+  opp:{total:287,attacking:98,attackingPct:34,middle:170,middlePct:59,defensive:19,defensivePct:7},
+  atImpact:{total:36,from:117,pct:31,goals:3,twopt:8,onept:25,scoreValue:50},
 };
 
 // ── KO Detailed Outcomes (from PDF analysis) ─────────────────────────────────
 const KO_OUTCOMES={
-  short:{mayoWin:'94% (16/17)',mayoTop:'Won Clean (16)',oppWin:'93% (51/55)',oppTop:'Won Clean (50)'},
-  medium:{mayoWin:'75% (44/59)',mayoTop1:'Won Clean (32)',mayoTop2:'Break Won (10)',mayoTop3:'Break Lost (7)',oppWin:'58% (28/48)',oppTop1:'Won Clean (19)',oppTop2:'Break Lost (11)'},
-  long:{mayoWin:'57% (46/80)',mayoTop1:'Break Lost (29)',mayoTop2:'Break Won (24)',mayoTop3:'Won Clean (20)',oppWin:'49% (39/80)',oppTop1:'Break Lost (26)',oppTop2:'Break Won (24)'}
+  short:{mayoWin:'78% (18/23)',mayoTop:'Won Clean (18)',oppWin:'91% (63/69)',oppTop:'Won Clean (63)',_raw:{mayo:{"KO LOST CLEAN":4,"KO WON CLEAN":18,"KO SIDELINE LOST":1},opp:{"KO WON CLEAN":63,"KO LOST CLEAN":3,"KO BREAK LOST":1,"KO SIDELINE LOST":1,"KO FREE WON":1}}},
+  medium:{mayoWin:'77% (62/81)',mayoTop1:'Won Clean (49)',mayoTop2:'Break Won (13)',mayoTop3:'Break Lost (10)',oppWin:'56% (30/54)',oppTop1:'Won Clean (23)',oppTop2:'Break Lost (13)',_raw:{mayo:{"KO WON CLEAN":49,"KO BREAK WON":13,"KO BREAK LOST":10,"KO SIDELINE LOST":2,"KO LOST CLEAN":4,"KO FREE WON":2,"KO FREE LOST":1},opp:{"KO WON CLEAN":23,"KO SIDELINE LOST":4,"KO FREE WON":2,"KO BREAK LOST":13,"KO LOST CLEAN":5,"KO BREAK WON":5,"KO SIDELINE WON":2}}},
+  long:{mayoWin:'55% (54/98)',mayoTop1:'Break Lost (35)',mayoTop2:'Break Won (29)',mayoTop3:'Won Clean (24)',oppWin:'50% (59/117)',oppTop1:'Break Won (37)',oppTop2:'Break Lost (35)',_raw:{mayo:{"KO LOST CLEAN":7,"KO BREAK WON":29,"KO SIDELINE LOST":1,"KO WON CLEAN":24,"KO BREAK LOST":35,"KO SIDELINE WON":1,"KO FREE LOST":1},opp:{"KO BREAK LOST":35,"KO LOST CLEAN":14,"KO BREAK WON":37,"KO FREE LOST":5,"KO WON CLEAN":21,"KO SIDELINE LOST":3,"KO FREE WON":1,"KO SIDELINE WON":1}}},
 };
 
 

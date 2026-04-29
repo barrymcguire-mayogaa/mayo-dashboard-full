@@ -25,6 +25,26 @@ XML_DIR   = os.path.join(BASE_DIR, 'NFL Timelines')
 PERIOD_BOUNDS = [0, 12, 24, 35, 47, 59, 9999]
 N_PERIODS = 6
 
+# ── Season-aggregate source/KO constants ─────────────────────────────────────
+SOURCE_CAT_MAP = {
+    'FORCED TURNOVER': 'to', 'UNFORCED TURNOVER': 'to', 'BALL RECOVERED': 'to',
+    'OWN KICKOUT': 'ownKO', 'OPP KICKOUT': 'oppKO',
+    'FREE WON': 'freeWon', 'THROW-IN': 'throwIn',
+}
+SOURCES = ['to', 'ownKO', 'oppKO', 'freeWon', 'throwIn']
+SOURCE_DISPLAY = {
+    'to': 'Turnover', 'ownKO': 'Own KO', 'oppKO': 'Opp KO',
+    'freeWon': 'Free Won', 'throwIn': 'Throw-in',
+}
+WON_KO_OUTCOMES = {'KO WON CLEAN', 'KO BREAK WON', 'KO SIDELINE WON'}
+KO_OUTCOME_DISPLAY = {
+    'KO WON CLEAN': 'Won Clean', 'KO BREAK WON': 'Break Won',
+    'KO BREAK LOST': 'Break Lost', 'KO LOST CLEAN': 'Lost Clean',
+    'KO SIDELINE WON': 'Sideline Won', 'KO SIDELINE LOST': 'Sideline Lost',
+    'KO FREE WON': 'Free Won', 'KO FREE LOST': 'Free Lost',
+}
+KO_LOC_MAP = {'KO SHORT': 'short', 'KO MEDIUM': 'medium', 'KO LONG': 'long'}
+
 def get_period(gm):
     for i in range(N_PERIODS):
         if PERIOD_BOUNDS[i] <= gm < PERIOD_BOUNDS[i+1]:
@@ -904,6 +924,423 @@ def fix_gk_ko_rounds_bug(html):
     block = block[:hen_start] + hen_block + block[hen_end:]
     return html[:start] + block + html[end:]
 
+# ── Season-aggregate helpers ──────────────────────────────────────────────────
+
+def replace_const(html, name, new_block):
+    """Replace a complete const block (from 'const NAME=' to the first \\n}; at column 0)."""
+    start = html.find(f'const {name}=')
+    if start == -1:
+        start = html.find(f'const {name} =')
+    if start == -1:
+        return html
+    close_pos = html.find('\n};', start)
+    if close_pos == -1:
+        return html
+    end = close_pos + 3  # include \n};
+    return html[:start] + new_block + html[end:]
+
+
+def _extract_round_from_filename(fname):
+    b = os.path.basename(fname)
+    m = re.search(r'\bRd\.(\d+)\b', b)
+    if m:
+        if 'AISFC' in b.upper():
+            return f'AISFC Rd.{m.group(1)}'
+        return f'Rd.{m.group(1)}'
+    m = re.search(r'(CSFC|AISFC)\s+(QF|SF|Final)', b, re.IGNORECASE)
+    if m:
+        return f'{m.group(1).upper()} {m.group(2)}'
+    return None
+
+
+def _parse_season_data_from_xml(xml_path):
+    """Lightweight parser returning data needed for season-aggregate structures."""
+    try:
+        with open(xml_path, 'rb') as f:
+            raw = f.read()
+        text = raw.decode('utf-16') if raw[:2] in (b'\xff\xfe', b'\xfe\xff') else raw.decode('utf-8', errors='replace')
+        tree = ET.fromstring(text)
+    except Exception:
+        return None
+
+    instances = tree.findall('ALL_INSTANCES/instance')
+
+    # Detect half timestamps for period calculation
+    H1_START = H1_END = H2_START = None
+    for inst in instances:
+        code = inst.findtext('code', '').strip()
+        if code == '1st Half':
+            H1_START = float(inst.findtext('start', 0))
+            H1_END   = float(inst.findtext('end',   0))
+        elif code == '2nd Half':
+            H2_START = float(inst.findtext('start', 0))
+    if None in (H1_START, H1_END, H2_START):
+        return None
+
+    def game_min(ts):
+        if ts <= H1_END:
+            return (ts - H1_START) / 60.0
+        return (H1_END - H1_START) / 60.0 + (ts - H2_START) / 60.0
+
+    def first_lbl(inst, group, default=''):
+        for lbl in inst.findall('label'):
+            if lbl.findtext('group', '').strip() == group:
+                return lbl.findtext('text', '').strip()
+        return default
+
+    opp_name = None
+    mayo_score_srcs = []   # [{ts, cat, score_type}]
+    opp_score_srcs  = []
+    mayo_shot_srcs  = []   # [{ts, cat}]  — missed shots
+    opp_shot_srcs   = []
+    mayo_tos_loc    = []   # [{ts, loc}]
+    opp_tos_loc     = []
+    mayo_ko_full    = []   # [{ts, loc, outcome_raw}]
+    opp_ko_full     = []
+    # period_scores: scoring value (goals*3+2pt*2+1pt) per 6-period slot
+    period_scores   = {'mayo': [0]*N_PERIODS, 'opp': [0]*N_PERIODS}
+
+    for inst in instances:
+        code = inst.findtext('code', '').strip()
+        ts   = float(inst.findtext('start', 0))
+
+        # ── SCORE SOURCE (scored shots) ───────────────────────────────────
+        if code == 'MAYO SCORE SOURCE':
+            raw_src    = first_lbl(inst, 'Score Source Outcomes')
+            score_type = first_lbl(inst, 'Score Source Score Outcomes', '1 POINT')
+            cat = SOURCE_CAT_MAP.get(raw_src)
+            if cat:
+                mayo_score_srcs.append({'ts': ts, 'cat': cat, 'score_type': score_type})
+
+        elif code.endswith(' SCORE SOURCE') and 'MAYO' not in code:
+            if opp_name is None:
+                opp_name = code[:-13].strip()
+            raw_src    = first_lbl(inst, 'Score Source Outcomes')
+            score_type = first_lbl(inst, 'Score Source Score Outcomes', '1 POINT')
+            cat = SOURCE_CAT_MAP.get(raw_src)
+            if cat:
+                opp_score_srcs.append({'ts': ts, 'cat': cat, 'score_type': score_type})
+
+        # ── SHOT SOURCE (missed shots) ────────────────────────────────────
+        elif code == 'MAYO SHOT SOURCE':
+            raw_src = first_lbl(inst, 'Shot Source Outcomes')
+            cat = SOURCE_CAT_MAP.get(raw_src)
+            if cat:
+                mayo_shot_srcs.append({'ts': ts, 'cat': cat})
+
+        elif code.endswith(' SHOT SOURCE') and 'MAYO' not in code:
+            raw_src = first_lbl(inst, 'Shot Source Outcomes')
+            cat = SOURCE_CAT_MAP.get(raw_src)
+            if cat:
+                opp_shot_srcs.append({'ts': ts, 'cat': cat})
+
+        # ── Turnovers with location ───────────────────────────────────────
+        elif code == 'MAYO TOs':
+            loc = first_lbl(inst, 'Turnover Location', 'MIDDLE THIRD')
+            mayo_tos_loc.append({'ts': ts, 'loc': loc})
+
+        elif code.endswith(' TOs') and 'MAYO' not in code:
+            if opp_name is None:
+                opp_name = code[:-4].strip()
+            loc = first_lbl(inst, 'Turnover Location', 'MIDDLE THIRD')
+            opp_tos_loc.append({'ts': ts, 'loc': loc})
+
+        # ── KO with raw outcome ───────────────────────────────────────────
+        elif code == 'MAYO KO':
+            raw_loc     = first_lbl(inst, 'Kickout Locations', 'KO LONG')
+            outcome_raw = first_lbl(inst, 'Kickout Outcomes', 'KO LOST CLEAN')
+            loc = KO_LOC_MAP.get(raw_loc, 'long')
+            mayo_ko_full.append({'ts': ts, 'loc': loc, 'outcome_raw': outcome_raw})
+
+        elif code.endswith(' KO') and 'MAYO' not in code:
+            if opp_name is None:
+                opp_name = code[:-3].strip()
+            raw_loc     = first_lbl(inst, 'Kickout Locations', 'KO LONG')
+            outcome_raw = first_lbl(inst, 'Kickout Outcomes', 'KO LOST CLEAN')
+            loc = KO_LOC_MAP.get(raw_loc, 'long')
+            opp_ko_full.append({'ts': ts, 'loc': loc, 'outcome_raw': outcome_raw})
+
+        # ── Scoring events (for PERIOD_SPLITS) ───────────────────────────
+        elif code in ('MAYO 1 POINT', 'MAYO 2 POINT', 'MAYO GOAL'):
+            p = get_period(game_min(ts))
+            if code == 'MAYO GOAL':       period_scores['mayo'][p] += 3
+            elif code == 'MAYO 2 POINT':  period_scores['mayo'][p] += 2
+            else:                         period_scores['mayo'][p] += 1
+
+        elif (code.endswith(' 1 POINT') or code.endswith(' 2 POINT') or
+              (code.endswith(' GOAL') and 'CHANCE' not in code)) and 'MAYO' not in code:
+            p = get_period(game_min(ts))
+            if code.endswith(' GOAL'):    period_scores['opp'][p] += 3
+            elif code.endswith(' 2 POINT'): period_scores['opp'][p] += 2
+            else:                         period_scores['opp'][p] += 1
+
+        # Detect opp name from other codes if still missing
+        elif opp_name is None:
+            if code.endswith(' ATTACKS') and 'MAYO' not in code:
+                opp_name = code[:-8].strip()
+            elif code.endswith(' FOUL') and 'MAYO' not in code:
+                opp_name = code[:-5].strip()
+
+    return {
+        'opp_name':        opp_name or 'Opponent',
+        'mayo_score_srcs': mayo_score_srcs,
+        'opp_score_srcs':  opp_score_srcs,
+        'mayo_shot_srcs':  mayo_shot_srcs,
+        'opp_shot_srcs':   opp_shot_srcs,
+        'mayo_tos_loc':    mayo_tos_loc,
+        'opp_tos_loc':     opp_tos_loc,
+        'mayo_ko_full':    mayo_ko_full,
+        'opp_ko_full':     opp_ko_full,
+        'period_scores':   period_scores,
+    }
+
+
+def _compute_at_impact(score_srcs, tos_loc):
+    """Chain: for each TO-source score, find nearest preceding TO in attacking third."""
+    result = {'total': 0, 'goals': 0, 'twopt': 0, 'onept': 0}
+    for sc in score_srcs:
+        if sc['cat'] != 'to':
+            continue
+        preceding = [t for t in tos_loc if t['ts'] <= sc['ts']]
+        if not preceding:
+            continue
+        nearest = max(preceding, key=lambda t: t['ts'])
+        if nearest['loc'] == 'ATTACKING THIRD':
+            result['total'] += 1
+            if sc['score_type'] == 'GOAL':
+                result['goals'] += 1
+            elif sc['score_type'] == '2 POINT':
+                result['twopt'] += 1
+            else:
+                result['onept'] += 1
+    return result
+
+
+def _format_ko_outcomes_block(mayo_kos, opp_kos):
+    """Build const KO_OUTCOMES={...}; JS block with _raw counts for future delta updates."""
+    from collections import Counter
+
+    def stats(kos, loc):
+        entries = [k for k in kos if k['loc'] == loc]
+        counts  = Counter(k['outcome_raw'] for k in entries)
+        total   = len(entries)
+        won     = sum(v for k, v in counts.items() if k in WON_KO_OUTCOMES)
+        pct     = int(won / total * 100 + 0.5) if total else 0
+        top     = [(KO_OUTCOME_DISPLAY.get(k, k), v) for k, v in counts.most_common()]
+        return {'win': f'{pct}% ({won}/{total})', 'top': top, 'raw': dict(counts)}
+
+    lines = ['const KO_OUTCOMES={']
+    for loc in ('short', 'medium', 'long'):
+        ms  = stats(mayo_kos, loc)
+        opp = stats(opp_kos,  loc)
+        m_raw = json.dumps(ms['raw'],  ensure_ascii=False, separators=(',', ':'))
+        o_raw = json.dumps(opp['raw'], ensure_ascii=False, separators=(',', ':'))
+        if loc == 'short':
+            m1 = f"'{ms['top'][0][0]} ({ms['top'][0][1]})'"  if ms['top']  else "''"
+            o1 = f"'{opp['top'][0][0]} ({opp['top'][0][1]})'" if opp['top'] else "''"
+            lines.append(
+                f"  {loc}:{{mayoWin:'{ms['win']}',mayoTop:{m1},"
+                f"oppWin:'{opp['win']}',oppTop:{o1},"
+                f"_raw:{{mayo:{m_raw},opp:{o_raw}}}}},"
+            )
+        else:
+            m_tops = ','.join(
+                f"mayoTop{i+1}:'{n} ({c})'" for i, (n, c) in enumerate(ms['top'][:3])
+            )
+            o_tops = ','.join(
+                f"oppTop{i+1}:'{n} ({c})'" for i, (n, c) in enumerate(opp['top'][:2])
+            )
+            lines.append(
+                f"  {loc}:{{mayoWin:'{ms['win']}',{m_tops},"
+                f"oppWin:'{opp['win']}',{o_tops},"
+                f"_raw:{{mayo:{m_raw},opp:{o_raw}}}}},"
+            )
+    lines.append('};')
+    return '\n'.join(lines)
+
+
+def rebuild_season_structures(html):
+    """Recompute SCORE_SOURCES, TURNOVER_ZONES, KO_OUTCOMES, PERIOD_SPLITS from all XMLs."""
+    xmls = sorted(glob.glob(os.path.join(XML_DIR, '*.xml')))
+    all_data = []
+    for xml_path in xmls:
+        gd = _parse_season_data_from_xml(xml_path)
+        if gd is None:
+            continue
+        round_label = _extract_round_from_filename(xml_path) or gd['opp_name'].title()
+        all_data.append((round_label, gd))
+
+    if not all_data:
+        return html
+
+    # ── Accumulate season totals ──────────────────────────────────────────────
+    # Source stats: per-category counts of shots and scores
+    src_stats = {
+        team: {src: {'goals': 0, 'twopt': 0, 'onept': 0, 'shots': 0}
+               for src in SOURCES}
+        for team in ('mayo', 'opp')
+    }
+    # Turnover zones
+    tz = {
+        'mayo': {'ATTACKING THIRD': 0, 'MIDDLE THIRD': 0, 'DEFENSIVE THIRD': 0},
+        'opp':  {'ATTACKING THIRD': 0, 'MIDDLE THIRD': 0, 'DEFENSIVE THIRD': 0},
+    }
+    # KO full data
+    all_mayo_kos = []
+    all_opp_kos  = []
+    # Period splits
+    ps = {'mayo': [0]*N_PERIODS, 'opp': [0]*N_PERIODS}
+    # atImpact accumulator
+    at_impact = {'total': 0, 'goals': 0, 'twopt': 0, 'onept': 0}
+    at_from   = 0  # total ATTACKING THIRD TOs (for 'from' field)
+
+    for _, gd in all_data:
+        # Score sources
+        for sc in gd['mayo_score_srcs']:
+            s = src_stats['mayo'][sc['cat']]
+            if sc['score_type'] == 'GOAL':    s['goals'] += 1
+            elif sc['score_type'] == '2 POINT': s['twopt'] += 1
+            else:                              s['onept'] += 1
+        for sc in gd['opp_score_srcs']:
+            s = src_stats['opp'][sc['cat']]
+            if sc['score_type'] == 'GOAL':    s['goals'] += 1
+            elif sc['score_type'] == '2 POINT': s['twopt'] += 1
+            else:                              s['onept'] += 1
+        # Shot sources (missed)
+        for sh in gd['mayo_shot_srcs']:
+            src_stats['mayo'][sh['cat']]['shots'] += 1
+        for sh in gd['opp_shot_srcs']:
+            src_stats['opp'][sh['cat']]['shots'] += 1
+
+        # Turnover zones
+        for t in gd['mayo_tos_loc']:
+            loc = t['loc']
+            if loc in tz['mayo']:
+                tz['mayo'][loc] += 1
+        for t in gd['opp_tos_loc']:
+            loc = t['loc']
+            if loc in tz['opp']:
+                tz['opp'][loc] += 1
+
+        # KOs
+        all_mayo_kos.extend(gd['mayo_ko_full'])
+        all_opp_kos.extend(gd['opp_ko_full'])
+
+        # Period splits
+        for i in range(N_PERIODS):
+            ps['mayo'][i] += gd['period_scores']['mayo'][i]
+            ps['opp'][i]  += gd['period_scores']['opp'][i]
+
+        # atImpact chain
+        ai = _compute_at_impact(gd['mayo_score_srcs'], gd['mayo_tos_loc'])
+        at_impact['total']  += ai['total']
+        at_impact['goals']  += ai['goals']
+        at_impact['twopt']  += ai['twopt']
+        at_impact['onept']  += ai['onept']
+        at_from += tz['mayo']['ATTACKING THIRD']  # running total (recalculated below)
+
+    # Recalculate at_from cleanly (total attacking-third TOs across all games)
+    at_from = tz['mayo']['ATTACKING THIRD']
+
+    # ── Build SCORE_SOURCES block ─────────────────────────────────────────────
+    def src_pct(cat, team):
+        s = src_stats[team]
+        total_scores = sum(
+            sv['goals'] + sv['twopt'] + sv['onept'] for sv in s.values()
+        )
+        scored = s[cat]['goals'] + s[cat]['twopt'] + s[cat]['onept']
+        return int(scored / total_scores * 100 + 0.5) if total_scores else 0
+
+    def src_eff(cat, team):
+        s = src_stats[team][cat]
+        scored = s['goals'] + s['twopt'] + s['onept']
+        total  = scored + s['shots']
+        return int(scored / total * 100 + 0.5) if total else 0
+
+    def src_total_shots(cat, team):
+        s = src_stats[team][cat]
+        return s['goals'] + s['twopt'] + s['onept'] + s['shots']
+
+    ss_lines = ['const SCORE_SOURCES={']
+    ss_lines.append('  mayo:{')
+    for cat in SOURCES:
+        s     = src_stats['mayo'][cat]
+        total = s['goals'] + s['twopt'] + s['onept']
+        shots = src_total_shots(cat, 'mayo')
+        eff   = src_eff(cat, 'mayo')
+        pct   = src_pct(cat, 'mayo')
+        ss_lines.append(
+            f"    {cat}:{{goals:{s['goals']},twopt:{s['twopt']},onept:{s['onept']},"
+            f"shots:{shots},eff:{eff},total:{total},pct:{pct}}},"
+        )
+    ss_lines.append('  },')
+    ss_lines.append('  opp:{')
+    for cat in SOURCES:
+        s     = src_stats['opp'][cat]
+        total = s['goals'] + s['twopt'] + s['onept']
+        shots = src_total_shots(cat, 'opp')
+        eff   = src_eff(cat, 'opp')
+        pct   = src_pct(cat, 'opp')
+        ss_lines.append(
+            f"    {cat}:{{goals:{s['goals']},twopt:{s['twopt']},onept:{s['onept']},"
+            f"shots:{shots},eff:{eff},total:{total},pct:{pct}}},"
+        )
+    ss_lines.append('  },')
+    ss_lines.append('};')
+    score_sources_block = '\n'.join(ss_lines)
+
+    # ── Build TURNOVER_ZONES block ────────────────────────────────────────────
+    m_total = sum(tz['mayo'].values())
+    o_total = sum(tz['opp'].values())
+
+    def tz_pct(zone, team):
+        tot = sum(tz[team].values())
+        return int(tz[team][zone] / tot * 100 + 0.5) if tot else 0
+
+    ai_sv = at_impact['goals'] * 3 + at_impact['twopt'] * 2 + at_impact['onept']
+    ai_pct = int(at_impact['total'] / at_from * 100 + 0.5) if at_from else 0
+
+    tz_block = (
+        'const TURNOVER_ZONES={\n'
+        f"  mayo:{{total:{m_total},"
+        f"attacking:{tz['mayo']['ATTACKING THIRD']},attackingPct:{tz_pct('ATTACKING THIRD','mayo')},"
+        f"middle:{tz['mayo']['MIDDLE THIRD']},middlePct:{tz_pct('MIDDLE THIRD','mayo')},"
+        f"defensive:{tz['mayo']['DEFENSIVE THIRD']},defensivePct:{tz_pct('DEFENSIVE THIRD','mayo')}}},"
+        '\n'
+        f"  opp:{{total:{o_total},"
+        f"attacking:{tz['opp']['ATTACKING THIRD']},attackingPct:{tz_pct('ATTACKING THIRD','opp')},"
+        f"middle:{tz['opp']['MIDDLE THIRD']},middlePct:{tz_pct('MIDDLE THIRD','opp')},"
+        f"defensive:{tz['opp']['DEFENSIVE THIRD']},defensivePct:{tz_pct('DEFENSIVE THIRD','opp')}}},"
+        '\n'
+        f"  atImpact:{{total:{at_impact['total']},from:{at_from},pct:{ai_pct},"
+        f"goals:{at_impact['goals']},twopt:{at_impact['twopt']},onept:{at_impact['onept']},"
+        f"scoreValue:{ai_sv}}},\n"
+        '};'
+    )
+
+    # ── Build KO_OUTCOMES block ───────────────────────────────────────────────
+    ko_outcomes_block = _format_ko_outcomes_block(all_mayo_kos, all_opp_kos)
+
+    # ── Build PERIOD_SPLITS block ─────────────────────────────────────────────
+    m_ps = ps['mayo']
+    o_ps = ps['opp']
+    ps_block = (
+        'const PERIOD_SPLITS={\n'
+        f"  mayo:[{','.join(str(v) for v in m_ps)}],\n"
+        f"  opp:[{','.join(str(v) for v in o_ps)}],\n"
+        f"  mayoTotal:{sum(m_ps)},oppTotal:{sum(o_ps)},\n"
+        '};'
+    )
+
+    # ── Replace all four blocks ───────────────────────────────────────────────
+    html = replace_const(html, 'SCORE_SOURCES',   score_sources_block)
+    html = replace_const(html, 'TURNOVER_ZONES',  tz_block)
+    html = replace_const(html, 'KO_OUTCOMES',     ko_outcomes_block)
+    html = replace_const(html, 'PERIOD_SPLITS',   ps_block)
+
+    return html
+
+
 # ── Main update function ──────────────────────────────────────────────────────
 def update_html(html, round_label, opponent, venue, parsed, gk_key='hennelly'):
     period_of = parsed['period_of']
@@ -1116,6 +1553,10 @@ def update_html(html, round_label, opponent, venue, parsed, gk_key='hennelly'):
     html = fix_gk_ko_rounds_bug(html)
     print(f'  ✓ GK_KO_DATA rounds string rebuilt')
 
+    # 23. SCORE_SOURCES / TURNOVER_ZONES / KO_OUTCOMES / PERIOD_SPLITS (rebuilt from all XMLs)
+    html = rebuild_season_structures(html)
+    print('  ✓ SCORE_SOURCES / TURNOVER_ZONES / KO_OUTCOMES / PERIOD_SPLITS (rebuilt)')
+
     return html
 
 # ── Git commit & push ─────────────────────────────────────────────────────────
@@ -1191,7 +1632,7 @@ def main(round_label, opponent, venue, xml_path=None, gk_key='hennelly'):
     print(f'   ℹ️  GK assigned to "{gk_key}" — verify this is correct.')
     print('   ℹ️  GK_KO_DATA.scoresFromKOWon and oppScoresFromKOLost require manual update.')
     print('   ℹ️  GK_KO_DATA.top3 player rankings require manual update from KO contest data.')
-    print('   ℹ️  SCORE_SOURCES, TURNOVER_ZONES, KO_OUTCOMES, PERIOD_SPLITS require manual update from PDF.')
+    print('   ℹ️  SCORE_SOURCES / TURNOVER_ZONES / KO_OUTCOMES / PERIOD_SPLITS are auto-rebuilt from all XMLs.')
     print('   ℹ️  RAW.seasonPlayers stats require manual update if needed.')
 
 if __name__ == '__main__':
