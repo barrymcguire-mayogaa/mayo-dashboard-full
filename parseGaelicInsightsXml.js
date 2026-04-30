@@ -373,9 +373,72 @@ function parseGaelicInsightsXml({
     }
   }
 
-  // ========== STEP 7: Offset Calculation ==========
-  const offset1H = half1Video - half1Whistle.start;
-  const offset2H = half2Video - half2Whistle.start;
+  // ========== STEP 7: Find First Gameplay Events (for video timing anchors) ==========
+  // Find first non-whistle event in 1H and 2H for video timing
+  let firstGameplayEvent1H = null;
+  let firstGameplayEvent2H = null;
+
+  for (const event of groupedEvents) {
+    if (event.code === 'NA Whistle') continue;
+
+    // Classify as 1H or 2H based on whistle boundaries
+    const isSecondHalf =
+      event.start > (halftimeWhistle?.start ?? half2Whistle.start - 1000) ||
+      (halftimeWhistle && event.start > halftimeWhistle.start && event.start >= half2Whistle.start - 10) ||
+      (!halftimeWhistle && event.start >= half2Whistle.start - 10);
+
+    if (!isSecondHalf && !firstGameplayEvent1H) {
+      firstGameplayEvent1H = event;
+    } else if (isSecondHalf && !firstGameplayEvent2H) {
+      firstGameplayEvent2H = event;
+    }
+
+    if (firstGameplayEvent1H && firstGameplayEvent2H) break;
+  }
+
+  // ========== STEP 7: Offset Calculation (Using First Gameplay Events) ==========
+  // Anchor video timing to first gameplay event, not to whistles
+  let offset1H = 0;
+  let offset2H = 0;
+
+  if (!firstGameplayEvent1H) {
+    return {
+      status: 'error',
+      events: [],
+      whistles,
+      warnings: ['No gameplay events found in first half'],
+      diagnostics: {
+        parser: 'gaelic-insights',
+        rawInstanceCount: instanceNodes.length,
+        uniqueEventCount: groupedEvents.length,
+        whistleCount: whistles.length,
+        autoDetectionUsed,
+        manualSelectionUsed,
+      },
+      error: 'Cannot find first gameplay event in 1st half for video timing anchor',
+    };
+  }
+
+  if (!firstGameplayEvent2H) {
+    return {
+      status: 'error',
+      events: [],
+      whistles,
+      warnings: ['No gameplay events found in second half'],
+      diagnostics: {
+        parser: 'gaelic-insights',
+        rawInstanceCount: instanceNodes.length,
+        uniqueEventCount: groupedEvents.length,
+        whistleCount: whistles.length,
+        autoDetectionUsed,
+        manualSelectionUsed,
+      },
+      error: 'Cannot find first gameplay event in 2nd half for video timing anchor',
+    };
+  }
+
+  offset1H = half1Video - firstGameplayEvent1H.start;
+  offset2H = half2Video - firstGameplayEvent2H.start;
 
   // ========== STEP 9: Event Classification & Step 10: Event Timing ==========
   const SECOND_HALF_PRE_WHISTLE_TOLERANCE_SECONDS = 10;
@@ -465,6 +528,47 @@ function parseGaelicInsightsXml({
     whistleCount: whistles.length,
     autoDetectionUsed,
     manualSelectionUsed,
+    whistleBoundaries: {
+      half1Whistle: {
+        id: half1Whistle.id,
+        xmlStart: half1Whistle.start,
+        xmlTime: half1Whistle.time,
+        purpose: 'half boundary and game clock reference',
+      },
+      half2Whistle: {
+        id: half2Whistle.id,
+        xmlStart: half2Whistle.start,
+        xmlTime: half2Whistle.time,
+        purpose: 'half boundary and game clock reference',
+      },
+      halftimeWhistle: halftimeWhistle
+        ? {
+            id: halftimeWhistle.id,
+            xmlStart: halftimeWhistle.start,
+            xmlTime: halftimeWhistle.time,
+          }
+        : null,
+    },
+    videoTimingAnchors: {
+      half1: {
+        eventId: firstGameplayEvent1H.id,
+        eventCode: firstGameplayEvent1H.code,
+        xmlStart: firstGameplayEvent1H.start,
+        xmlTime: formatTime(firstGameplayEvent1H.start),
+        userVideoStart: half1Video,
+        userVideoTime: formatTime(half1Video),
+        offset: offset1H,
+      },
+      half2: {
+        eventId: firstGameplayEvent2H.id,
+        eventCode: firstGameplayEvent2H.code,
+        xmlStart: firstGameplayEvent2H.start,
+        xmlTime: formatTime(firstGameplayEvent2H.start),
+        userVideoStart: half2Video,
+        userVideoTime: formatTime(half2Video),
+        offset: offset2H,
+      },
+    },
     selectedAnchors: {
       half1: {
         id: half1Whistle.id,
@@ -532,6 +636,12 @@ function parseGaelicInsightsXml({
 }
 
 // ========== Helper Functions ==========
+
+function formatTime(seconds) {
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.round(seconds % 60);
+  return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+}
 
 function parseXmlRegex(xmlText) {
   // Simple regex-based XML parser for Node.js environment

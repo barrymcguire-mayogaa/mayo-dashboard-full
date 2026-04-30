@@ -21,31 +21,40 @@
     {
       "id": "fermanagh-armagh-2024-usfc-qf",
       "title": "Fermanagh v Armagh",
-      "date": "2024-06-02",
+      "date": "2024-10-26",
       "competition": "Ulster SFC",
       "round": "Quarter-Final",
       "homeTeam": "Fermanagh",
       "awayTeam": "Armagh",
-      "homeColor": "#003399",
-      "awayColor": "#FF9900",
-      "youtubeId": "unknown",
+      "colors": {
+        "home": "#FF6600",
+        "away": "#FFFF00"
+      },
+      "youtubeId": "h-hC7gF9dXk",
       "half1Start": 55,
       "half2Start": 2349,
-      "et1Start": null,
-      "et2Start": null,
-      "thumbnail": "https://img.youtube.com/vi/unknown/hqdefault.jpg",
       "eventCount": 164,
       "parser": "gaelic-insights",
       "whistles": {
         "half1": {
           "id": "1",
-          "xmlTime": "00:14.24",
-          "offset": 40.76
+          "xmlTime": 14.24
         },
         "half2": {
           "id": "87",
-          "xmlTime": "38:43.94",
-          "offset": 25.050000000000182
+          "xmlTime": 2323.95
+        }
+      },
+      "videoAnchors": {
+        "half1": {
+          "eventId": "2",
+          "xmlStart": 52.26,
+          "offset": 2.740000000000002
+        },
+        "half2": {
+          "eventId": "88",
+          "xmlStart": 2346.53,
+          "offset": 2.4699999999998
         }
       }
     }
