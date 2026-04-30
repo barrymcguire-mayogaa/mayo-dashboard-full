@@ -271,8 +271,8 @@ code{background:var(--card);border:1px solid var(--border);border-radius:4px;pad
     <div class="step-header">
       <div class="step-num">3</div>
       <div>
-        <div class="step-title">Upload Sportscode XML</div>
-        <div class="step-sub">Drop or click to select the XML export from Hudl Sportscode</div>
+        <div class="step-title">Upload Gaelic Insights XML</div>
+        <div class="step-sub">Drop or click to select the XML export from Gaelic Insights</div>
       </div>
     </div>
 
@@ -283,7 +283,7 @@ code{background:var(--card);border:1px solid var(--border);border-radius:4px;pad
          ondrop="handleDrop(event)">
       <div class="dz-icon">📂</div>
       <div class="dz-title">Drop XML file here or click to browse</div>
-      <div class="dz-sub">Sportscode XML export (.xml) — UTF-16 LE encoding</div>
+      <div class="dz-sub">Gaelic Insights XML export (.xml) — UTF-8 encoding</div>
       <div class="dz-file" id="dzFileName"></div>
     </div>
     <input type="file" id="xmlFile" accept=".xml" onchange="handleFileSelect(this)">
@@ -293,6 +293,31 @@ code{background:var(--card);border:1px solid var(--border);border-radius:4px;pad
     <button class="process-btn" id="processBtn" onclick="processGame()" disabled>
       ⚙ Generate Game Files
     </button>
+
+    <!-- Whistle Selection Modal (Gaelic Insights) -->
+    <div id="whistleModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; align-items:center; justify-content:center;">
+      <div style="background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:24px; max-width:500px; width:90%; max-height:80vh; overflow-y:auto;">
+        <h3 style="margin:0 0 16px 0; color:var(--accent);">Select Whistle Anchors</h3>
+        <p style="color:var(--t2); font-size:13px; margin:0 0 16px 0;">
+          The parser found ambiguous whistles. Please select which whistle marks the start of each half.
+        </p>
+
+        <div style="margin-bottom:20px;">
+          <label style="display:block; margin-bottom:12px; font:700 12px 'Barlow Condensed'; letter-spacing:1px; color:var(--t3); text-transform:uppercase;">1st Half Start Whistle:</label>
+          <div id="whistleH1List" style="display:flex; flex-direction:column; gap:8px;"></div>
+        </div>
+
+        <div style="margin-bottom:20px;">
+          <label style="display:block; margin-bottom:12px; font:700 12px 'Barlow Condensed'; letter-spacing:1px; color:var(--t3); text-transform:uppercase;">2nd Half Start Whistle:</label>
+          <div id="whistleH2List" style="display:flex; flex-direction:column; gap:8px;"></div>
+        </div>
+
+        <div style="display:flex; gap:10px;">
+          <button onclick="closeWhistleModal()" style="flex:1; padding:10px; background:var(--card); border:1px solid var(--border); border-radius:7px; color:var(--t1); cursor:pointer; font:700 12px 'Barlow Condensed';">Cancel</button>
+          <button onclick="confirmWhistleSelection()" style="flex:1; padding:10px; background:var(--accent); border:none; border-radius:7px; color:#fff; cursor:pointer; font:700 12px 'Barlow Condensed';">Confirm</button>
+        </div>
+      </div>
+    </div>
 
     <!-- Progress -->
     <div class="progress-block" id="progressBlock">
@@ -320,6 +345,7 @@ code{background:var(--card);border:1px solid var(--border);border-radius:4px;pad
   </div>
 </div>
 
+<script src="parseGaelicInsightsXml.js"></script>
 <script>
 // ── Auth ──────────────────────────────────────────────────────
 const auth = sessionStorage.getItem('cohesion_auth');
@@ -454,9 +480,6 @@ async function processGame(){
   const ytUrl       = document.getElementById('youtubeUrl').value.trim();
   const t1Str       = document.getElementById('t1').value.trim();
   const t2Str       = document.getElementById('t2').value.trim();
-  const hasET       = document.getElementById('etCheck').checked;
-  const tet1Str     = document.getElementById('tet1').value.trim();
-  const tet2Str     = document.getElementById('tet2').value.trim();
 
   if(!homeTeam||!awayTeam){ showError('Please enter both team names.'); return; }
   if(!competition){ showError('Please select a competition.'); return; }
@@ -470,122 +493,57 @@ async function processGame(){
   const half2Video = parseTime(t2Str);
   if(half1Video === null || half2Video === null){ showError('Please enter valid start times in MM:SS format (e.g. 01:43).'); return; }
 
-  const et1Video = hasET ? parseTime(tet1Str) : null;
-  const et2Video = hasET ? parseTime(tet2Str) : null;
-  if(hasET && (et1Video===null||et2Video===null)){ showError('Please enter valid extra time start times.'); return; }
-
   // Show progress
   document.getElementById('progressBlock').classList.add('show');
   document.getElementById('processBtn').disabled = true;
   setProgress(10, 'Reading XML file…');
 
   try{
-    // Read file as ArrayBuffer
+    // Read file as text
     const buffer = await xmlFile.arrayBuffer();
     setProgress(25, 'Decoding XML…');
 
-    // Decode UTF-16 LE
+    // Try UTF-8 first, fall back to UTF-16 LE
     let text;
     try{
+      const decoder = new TextDecoder('utf-8');
+      text = decoder.decode(buffer);
+    } catch(e){
       const decoder = new TextDecoder('utf-16le');
       text = decoder.decode(buffer);
       if(text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
-    } catch(e){
-      const decoder = new TextDecoder('utf-8');
-      text = decoder.decode(buffer);
     }
 
-    setProgress(40, 'Parsing events…');
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(text, 'text/xml');
-    if(doc.querySelector('parsererror')){ showError('Could not parse the XML file. Please check it is a valid Sportscode export.'); return; }
+    setProgress(40, 'Parsing with Gaelic Insights parser…');
 
-    const instances = Array.from(doc.querySelectorAll('instance'));
-    setProgress(55, `Found ${instances.length} instances…`);
-
-    // Find half boundaries in XML
-    let xmlHalf1=null, xmlHalf2=null, xmlET1=null, xmlET2=null;
-    instances.forEach(inst=>{
-      const code = inst.querySelector('code')?.textContent?.trim()||'';
-      const start = parseFloat(inst.querySelector('start')?.textContent||0);
-      if(code==='1st Half' && xmlHalf1===null) xmlHalf1=start;
-      if(code==='2nd Half' && xmlHalf2===null) xmlHalf2=start;
-      if(code==='ET 1st Half' && xmlET1===null) xmlET1=start;
-      if(code==='ET 2nd Half' && xmlET2===null) xmlET2=start;
+    // Call the Gaelic Insights parser
+    const parseResult = parseGaelicInsightsXml({
+      xmlText: text,
+      homeTeam,
+      awayTeam,
+      half1Video,
+      half2Video,
+      selectedWhistles: null,
+      seekPrerollSeconds: 2
     });
 
-    if(xmlHalf1===null){ showError('Could not find "1st Half" marker in the XML. Please check this is a Sportscode export.'); return; }
-    if(xmlHalf2===null){ showError('Could not find "2nd Half" marker in the XML.'); return; }
+    // Handle parsing status
+    if(parseResult.status === 'error'){
+      showError(parseResult.error || 'Failed to parse XML');
+      return;
+    }
 
-    // Offsets
-    const offsets = {
-      '1st Half':    half1Video - xmlHalf1,
-      '2nd Half':    half2Video - xmlHalf2,
-      'ET 1st Half': et1Video !== null && xmlET1 !== null ? et1Video - xmlET1 : null,
-      'ET 2nd Half': et2Video !== null && xmlET2 !== null ? et2Video - xmlET2 : null,
-    };
-
-    // Refs for game time calculation
-    const xmlRefs = {
-      '1st Half': xmlHalf1,
-      '2nd Half': xmlHalf2,
-      'ET 1st Half': xmlET1,
-      'ET 2nd Half': xmlET2,
-    };
-
-    const SKIP = new Set(['THROW-IN','1st Half','2nd Half','ET 1st Half','ET 2nd Half','Count']);
-
-    setProgress(65, 'Processing events…');
-    const events = [];
-    instances.forEach(inst=>{
-      const code = inst.querySelector('code')?.textContent?.trim()||'';
-      if(SKIP.has(code)) return;
-
-      const start = parseFloat(inst.querySelector('start')?.textContent||0);
-      const end   = parseFloat(inst.querySelector('end')?.textContent||0);
-
-      // Labels
-      const labels = {};
-      inst.querySelectorAll('label').forEach(l=>{
-        const g = l.querySelector('group')?.textContent?.trim()||'NO_GROUP';
-        const t = l.querySelector('text')?.textContent?.trim()||'';
-        if(t) labels[g] = t;
+    if(parseResult.status === 'needs_whistle_selection'){
+      // Show whistle selector modal
+      showWhistleSelector(parseResult.whistles, () => {
+        // Retry with selected whistles
+        retryWithSelectedWhistles(parseResult.whistles, homeTeam, awayTeam, half1Video, half2Video, competition, round, dateVal, ytId, ytUrl);
       });
+      return;
+    }
 
-      // Half
-      let half = '1st Half';
-      if(xmlET2!==null && start>=xmlET2) half='ET 2nd Half';
-      else if(xmlET1!==null && start>=xmlET1) half='ET 1st Half';
-      else if(xmlHalf2!==null && start>=xmlHalf2) half='2nd Half';
-
-      // Video timestamp
-      const offset = offsets[half]||0;
-      const driveT = Math.max(0, Math.round(start + offset) - 2);
-
-      const team = labels['Team Name'] || (code.includes('MAYO')?'MAYO': code.includes('LONDON')?'LONDON':'');
-      const player = labels['Mayo Player Labels'] || labels['NO_GROUP'] || '';
-      const outcome = labels['Shot Outcomes'] || labels['Game Involvement Outcomes'] ||
-                      labels['Kickout Outcomes'] || labels['Turnover Outcomes'] ||
-                      labels['Tackle Outcomes'] || '';
-      const subtype = labels['Deadball Shot Type'] || labels['Shot Zones'] ||
-                      labels['Kickout Locations'] || '';
-
-      events.push({
-        id: inst.querySelector('ID')?.textContent?.trim()||String(events.length+1),
-        start: Math.round(start),
-        end: Math.round(end),
-        half,
-        gameTime: getGameTime(half, start, xmlRefs),
-        code,
-        team,
-        player,
-        outcome,
-        subtype,
-        category: getCategory(code),
-        driveT,
-      });
-    });
-
+    // Successfully parsed with auto-detection or manual selection
+    const events = parseResult.events;
     setProgress(80, 'Generating files…');
 
     // Build game ID
@@ -609,18 +567,16 @@ async function processGame(){
       youtubeId: ytId,
       half1Start: half1Video,
       half2Start: half2Video,
-      et1Start: et1Video,
-      et2Start: et2Video,
       thumbnail: `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`,
       eventCount: events.length,
+      parser: 'gaelic-insights',
+      diagnostics: parseResult.diagnostics,
     };
 
     // Create downloads
-    const eventsBlob = new Blob([JSON.stringify(events)], {type:'application/json'});
+    const eventsBlob = new Blob([JSON.stringify(events, null, 2)], {type:'application/json'});
     const eventsUrl  = URL.createObjectURL(eventsBlob);
 
-    // For games.json we provide the new entry — user will need to add to existing file
-    // We generate a stub showing what to add
     const newGamesEntry = JSON.stringify({games:[gameMeta]}, null, 2);
     const gamesBlob = new Blob([newGamesEntry], {type:'application/json'});
     const gamesUrl  = URL.createObjectURL(gamesBlob);
@@ -632,9 +588,181 @@ async function processGame(){
     document.getElementById('dlGames').href      = gamesUrl;
     document.getElementById('dlGames').download  = `${gameId}_meta.json`;
 
-    // Update instructions for games.json merging
-    document.querySelector('.dl-btn:last-of-type + .instructions .inst-step:last-child div:last-child').innerHTML =
-      `The metadata file contains the entry to add to your <code>games/games.json</code> inside the <code>"games": [...]</code> array. Open <code>games.json</code> in GitHub, click the pencil icon to edit, paste the new entry into the array, and commit.`;
+    document.getElementById('downloadsBlock').classList.add('show');
+
+  } catch(err){
+    showError('An error occurred: ' + err.message);
+    console.error(err);
+  } finally{
+    document.getElementById('processBtn').disabled = false;
+  }
+}
+
+// ── Whistle Selection (Gaelic Insights) ────────────────────────
+let pendingWhistles = null;
+let pendingCallback = null;
+
+function showWhistleSelector(whistles, onConfirm){
+  pendingWhistles = whistles;
+  pendingCallback = onConfirm;
+
+  // Build whistle list UI
+  const h1List = document.getElementById('whistleH1List');
+  const h2List = document.getElementById('whistleH2List');
+
+  h1List.innerHTML = '';
+  h2List.innerHTML = '';
+
+  whistles.forEach(w => {
+    const radio1 = document.createElement('input');
+    radio1.type = 'radio';
+    radio1.name = 'h1-whistle';
+    radio1.value = w.id;
+    radio1.id = `h1-whistle-${w.id}`;
+
+    const label1 = document.createElement('label');
+    label1.htmlFor = radio1.id;
+    label1.textContent = `Whistle ${w.index}: ${w.time}`;
+
+    const div1 = document.createElement('div');
+    div1.appendChild(radio1);
+    div1.appendChild(label1);
+    h1List.appendChild(div1);
+
+    const radio2 = document.createElement('input');
+    radio2.type = 'radio';
+    radio2.name = 'h2-whistle';
+    radio2.value = w.id;
+    radio2.id = `h2-whistle-${w.id}`;
+
+    const label2 = document.createElement('label');
+    label2.htmlFor = radio2.id;
+    label2.textContent = `Whistle ${w.index}: ${w.time}`;
+
+    const div2 = document.createElement('div');
+    div2.appendChild(radio2);
+    div2.appendChild(label2);
+    h2List.appendChild(div2);
+  });
+
+  document.getElementById('whistleModal').style.display = 'block';
+}
+
+function confirmWhistleSelection(){
+  const h1Id = document.querySelector('input[name="h1-whistle"]:checked')?.value;
+  const h2Id = document.querySelector('input[name="h2-whistle"]:checked')?.value;
+
+  if(!h1Id || !h2Id){
+    alert('Please select both 1H and 2H whistles');
+    return;
+  }
+
+  if(h1Id === h2Id){
+    alert('1H and 2H whistles must be different');
+    return;
+  }
+
+  document.getElementById('whistleModal').style.display = 'none';
+
+  if(pendingCallback){
+    const selectedWhistles = {
+      half1: { id: h1Id },
+      half2: { id: h2Id }
+    };
+    pendingCallback(selectedWhistles);
+  }
+}
+
+function closeWhistleModal(){
+  document.getElementById('whistleModal').style.display = 'none';
+}
+
+// ── Retry with Selected Whistles ───────────────────────────────
+async function retryWithSelectedWhistles(whistles, homeTeam, awayTeam, half1Video, half2Video, competition, round, dateVal, ytId, ytUrl){
+  // Get selected whistle IDs from form
+  const h1Id = document.querySelector('input[name="h1-whistle"]:checked')?.value;
+  const h2Id = document.querySelector('input[name="h2-whistle"]:checked')?.value;
+
+  if(!h1Id || !h2Id) return;
+
+  setProgress(50, 'Re-parsing with selected whistles…');
+  document.getElementById('processBtn').disabled = true;
+
+  try{
+    // Recall parser with selected whistles
+    const buffer = await xmlFile.arrayBuffer();
+    let text;
+    try{
+      const decoder = new TextDecoder('utf-8');
+      text = decoder.decode(buffer);
+    } catch(e){
+      const decoder = new TextDecoder('utf-16le');
+      text = decoder.decode(buffer);
+      if(text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+    }
+
+    const parseResult = parseGaelicInsightsXml({
+      xmlText: text,
+      homeTeam,
+      awayTeam,
+      half1Video,
+      half2Video,
+      selectedWhistles: {
+        half1: { id: h1Id },
+        half2: { id: h2Id }
+      },
+      seekPrerollSeconds: 2
+    });
+
+    if(parseResult.status === 'error'){
+      showError(parseResult.error || 'Failed to parse with selected whistles');
+      return;
+    }
+
+    const events = parseResult.events;
+    setProgress(80, 'Generating files…');
+
+    // Build game ID
+    const safeHome = homeTeam.toLowerCase().replace(/[^a-z0-9]/g,'-');
+    const safeAway = awayTeam.toLowerCase().replace(/[^a-z0-9]/g,'-');
+    const safeComp = competition.toLowerCase().replace(/[^a-z0-9]/g,'-').replace(/-+/g,'-');
+    const year     = dateVal ? dateVal.slice(0,4) : new Date().getFullYear();
+    const gameId   = `${safeHome}-${safeAway}-${year}-${safeComp}`;
+
+    // Game metadata entry
+    const gameMeta = {
+      id: gameId,
+      title: `${homeTeam} v ${awayTeam}`,
+      date: dateVal || new Date().toISOString().slice(0,10),
+      competition,
+      round,
+      homeTeam,
+      awayTeam,
+      homeColor: document.getElementById('homeColor').value,
+      awayColor: document.getElementById('awayColor').value,
+      youtubeId: ytId,
+      half1Start: half1Video,
+      half2Start: half2Video,
+      thumbnail: `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`,
+      eventCount: events.length,
+      parser: 'gaelic-insights',
+      diagnostics: parseResult.diagnostics,
+    };
+
+    // Create downloads
+    const eventsBlob = new Blob([JSON.stringify(events, null, 2)], {type:'application/json'});
+    const eventsUrl  = URL.createObjectURL(eventsBlob);
+
+    const newGamesEntry = JSON.stringify({games:[gameMeta]}, null, 2);
+    const gamesBlob = new Blob([newGamesEntry], {type:'application/json'});
+    const gamesUrl  = URL.createObjectURL(gamesBlob);
+
+    setProgress(100, `Done — ${events.length} events processed.`);
+
+    document.getElementById('dlEvents').href     = eventsUrl;
+    document.getElementById('dlEvents').download = `${gameId}.json`;
+    document.getElementById('dlGames').href      = gamesUrl;
+    document.getElementById('dlGames').download  = `${gameId}_meta.json`;
 
     document.getElementById('downloadsBlock').classList.add('show');
 
