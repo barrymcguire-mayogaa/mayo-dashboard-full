@@ -66,6 +66,22 @@ const testCases = [
     half2Video: 2325,
     description: 'Offaly v Cork (D2R3)',
   },
+  {
+    file: '/Users/barrymcguire/Downloads/gaeilc_insights_nfl_d2r2_louth_v_cork.xml',
+    homeTeam: 'Louth',
+    awayTeam: 'Cork',
+    half1Video: 60,
+    half2Video: 2350,
+    description: 'Louth v Cork (D2R2)',
+  },
+  {
+    file: '/Users/barrymcguire/Downloads/gaeilc_insights_nfl_d2r1_cork_v_cavan.xml',
+    homeTeam: 'Cork',
+    awayTeam: 'Cavan',
+    half1Video: 70,
+    half2Video: 2370,
+    description: 'Cork v Cavan (D2R1)',
+  },
 ];
 
 console.log('\n========== GAELIC INSIGHTS PARSER VALIDATION ==========\n');
