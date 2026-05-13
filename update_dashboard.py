@@ -531,11 +531,11 @@ def update_player_score_detail(html, mayo_scores):
             g  = int(m.group(1)) + _d['goals']
             p2 = int(m.group(2)) + _d['pt2']
             p1 = int(m.group(3)) + _d['pt1']
-            return f'"{player}"' + '{' + f'goals:{g},pt2:{p2},pt1:{p1},total:{g+p2+p1}' + '}'
+            return f'"{player}":' + '{' + f'goals:{g},pt2:{p2},pt1:{p1},total:{g+p2+p1}' + '}'
         new_block, n = pat.subn(updater, block)
         if n == 0:
             close = new_block.rfind('};')
-            entry = f'  "{player}"' + '{' + f'goals:{d["goals"]},pt2:{d["pt2"]},pt1:{d["pt1"]},total:{d["goals"]+d["pt2"]+d["pt1"]}' + '},\n'
+            entry = f'  "{player}":' + '{' + f'goals:{d["goals"]},pt2:{d["pt2"]},pt1:{d["pt1"]},total:{d["goals"]+d["pt2"]+d["pt1"]}' + '},\n'
             new_block = new_block[:close] + entry + new_block[close:]
         block = new_block
 
