@@ -2178,7 +2178,7 @@ const OPP_KO_DATA=[
   [47,89,0,"CSFC SF","long",null],
   [38,91,1,"CSFC SF","long",null],
   [76,13,1,"CSFC SF","short",null],
-  [51,14,1,"CSFC SF","long",null]
+  [51,14,1,"CSFC SF","long",null],
   [62,88,0,'AISFC Rd.1',null],
   [49,21,0,'AISFC Rd.1',null],
   [70,49,1,'AISFC Rd.1',null],
@@ -6744,7 +6744,7 @@ function renderOppKoPitchMap(){
       <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
         <span style="font-size:11px;font-weight:700;color:var(--muted)">Round</span>
         <select onchange="document.getElementById('opp-ko-map-wrap')._round=this.value;renderOppKoPitchMap()" style="font-size:12px;padding:4px 10px;font-weight:500;border-radius:8px;border:1px solid var(--border);color:var(--text);background:var(--white);cursor:pointer">
-          ${['All','Rd.1','Rd.2','Rd.3','Rd.4','Rd.5','Rd.6','Rd.7','CSFC QF','CSFC SF'].map(v=>`<option value="${v}" ${roundF===v?'selected':''}>${v==='All'?'All Games':v}</option>`).join('')}
+          ${['All','Rd.1','Rd.2','Rd.3','Rd.4','Rd.5','Rd.6','Rd.7','CSFC QF','CSFC SF','AISFC Rd.1'].map(v=>`<option value="${v}" ${roundF===v?'selected':''}>${v==='All'?'All Games':v}</option>`).join('')}
         </select>
       </div>
     </div>
