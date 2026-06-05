@@ -342,7 +342,7 @@ tr:hover td{background:#f9fafb}
   <header id="topbar">
     <div style="display:flex;flex-direction:column;gap:6px">
       <div class="topbar-title">Mayo Performance Dashboard</div>
-      <div class="topbar-sub">2026 NFL Div. 1 &amp; Connacht SFC — 8 Games</div>
+      <div class="topbar-sub">2026 NFL & Champ. — 10 Games</div>
       <div id="comp-tabs" style="display:flex;gap:0;border-radius:8px;overflow:hidden;border:1px solid var(--border);width:fit-content">
         <button class="comp-tab active" data-comp="all" onclick="setComp('all')" style="padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;border:none;border-right:1px solid var(--border);background:var(--green);color:#fff">All Games</button>
         <button class="comp-tab" data-comp="league" onclick="setComp('league')" style="padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;border:none;border-right:1px solid var(--border);background:var(--bg);color:var(--text)">League</button>
@@ -6633,7 +6633,7 @@ function renderKoPitchMap(){
       <div style="margin-right:auto;display:flex;gap:8px;align-items:center">
         <span style="font-size:11px;font-weight:700;color:var(--muted)">Game</span>
         <select onchange="document.getElementById('ko-pitch-map-wrap')._round=this.value;renderKoPitchMap()" style="font-size:12px;padding:4px 10px;font-weight:500;border-radius:8px;border:1px solid var(--border);color:var(--text);background:var(--white);cursor:pointer">
-          ${['All','Rd.1','Rd.2','Rd.3','Rd.4','Rd.5','Rd.6','Rd.7','CSFC QF','CSFC SF'].map(v=>`<option value="${v}" ${roundFilter===v?'selected':''}>${v==='All'?'All Games':v}</option>`).join('')}
+          ${['All','Rd.1','Rd.2','Rd.3','Rd.4','Rd.5','Rd.6','Rd.7','CSFC QF','CSFC SF','AISFC Rd.1'].map(v=>`<option value="${v}" ${roundFilter===v?'selected':''}>${v==='All'?'All Games':v}</option>`).join('')}
         </select>
       </div>
       <span style="font-size:11px;font-weight:700;color:var(--muted)">GK</span>
