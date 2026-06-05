@@ -3396,41 +3396,35 @@ function renderOverview(){
     plugins:{legend:{display:false}}}});
 
   // ── Score Sources panel ──
+  // SCORE_SOURCES is keyed by category: {mayo:{to:{},ownKO:{},oppKO:{},freeWon:{},throwIn:{}}, opp:{...}}
   const ss=SCORE_SOURCES;
+  const SS_KEYS =['to','ownKO','oppKO','freeWon','throwIn'];
+  const SS_NAMES={to:'Turnover',ownKO:'Own KO',oppKO:'Opp KO',freeWon:'Free Won',throwIn:'Throw-in'};
+  const SS_COLS_M=['#0B8F47','#3B82F6','#F59E0B','#8B5CF6','#06B6D4'];
+  const SS_COLS_O=['#C62828','#9C27B0','#FF5722','#D97706','#0891B2'];
+  const ssRow=(key,d,col)=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+    <div style="width:10px;height:10px;border-radius:50%;background:${col};flex-shrink:0"></div>
+    <div style="flex:1;font-size:12px;font-weight:600">${SS_NAMES[key]}</div>
+    <div style="font-size:13px;font-weight:800;color:${col};width:32px;text-align:right">${d.total}</div>
+    <div style="width:80px;height:8px;background:var(--border);border-radius:4px"><div style="height:100%;width:${d.pct}%;background:${col};border-radius:4px"></div></div>
+    <div style="font-size:11px;color:var(--muted);width:30px;text-align:right">${d.pct}%</div>
+    <div style="font-size:10px;color:var(--muted);width:36px;text-align:right">${d.eff}% eff</div>
+  </div>`;
   const ssHTML=`<div style="margin-bottom:12px">
     <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Mayo — Where Scores Come From</div>
-    ${ss.mayo.map((s,i)=>{
-      const cols=['#0B8F47','#3B82F6','#F59E0B'];
-      return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-        <div style="width:10px;height:10px;border-radius:50%;background:${cols[i]};flex-shrink:0"></div>
-        <div style="flex:1;font-size:12px;font-weight:600">${s.source}</div>
-        <div style="font-size:13px;font-weight:800;color:${cols[i]};width:32px;text-align:right">${s.total}</div>
-        <div style="width:80px;height:8px;background:var(--border);border-radius:4px"><div style="height:100%;width:${s.pct}%;background:${cols[i]};border-radius:4px"></div></div>
-        <div style="font-size:11px;color:var(--muted);width:30px;text-align:right">${s.pct}%</div>
-        <div style="font-size:10px;color:var(--muted);width:36px;text-align:right">${s.eff}% eff</div>
-      </div>`;
-    }).join('')}
+    ${SS_KEYS.map((k,i)=>ssRow(k,ss.mayo[k],SS_COLS_M[i])).join('')}
   </div>
   <div>
     <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Opposition — Where They Score Against Mayo</div>
-    ${ss.opp.map((s,i)=>{
-      const cols=['#C62828','#9C27B0','#FF5722'];
-      return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-        <div style="width:10px;height:10px;border-radius:50%;background:${cols[i]};flex-shrink:0"></div>
-        <div style="flex:1;font-size:12px;font-weight:600">${s.source}</div>
-        <div style="font-size:13px;font-weight:800;color:${cols[i]};width:32px;text-align:right">${s.total}</div>
-        <div style="width:80px;height:8px;background:var(--border);border-radius:4px"><div style="height:100%;width:${s.pct}%;background:${cols[i]};border-radius:4px"></div></div>
-        <div style="font-size:11px;color:var(--muted);width:30px;text-align:right">${s.pct}%</div>
-        <div style="font-size:10px;color:var(--muted);width:36px;text-align:right">${s.eff}% eff</div>
-      </div>`;
-    }).join('')}
+    ${SS_KEYS.map((k,i)=>ssRow(k,ss.opp[k],SS_COLS_O[i])).join('')}
   </div>`;
   document.getElementById('ov-score-sources').innerHTML=ssHTML;
 
   // ── 12-Minute Period Splits chart ──
   const ps=PERIOD_SPLITS;
+  const psLabels=['0–12','12–24','24–35','35–47','47–59','59–70+'];
   mkChart('ov-period-chart',{type:'bar',data:{
-    labels:ps.periods,
+    labels:psLabels,
     datasets:[
       {label:'Mayo',data:ps.mayo,backgroundColor:GREEN+'CC',borderRadius:4,stack:'s'},
       {label:'Opposition',data:ps.opp.map(v=>-v),backgroundColor:RED+'CC',borderRadius:4,stack:'s'},
