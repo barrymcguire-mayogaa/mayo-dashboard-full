@@ -6986,7 +6986,7 @@ function renderKoPitchMap(){
       <div style="margin-right:auto;display:flex;gap:8px;align-items:center">
         <span style="font-size:11px;font-weight:700;color:var(--muted)">Game</span>
         <select onchange="document.getElementById('ko-pitch-map-wrap')._round=this.value;renderKoPitchMap()" style="font-size:12px;padding:4px 10px;font-weight:500;border-radius:8px;border:1px solid var(--border);color:var(--text);background:var(--white);cursor:pointer">
-          ${['All','Rd.1','Rd.2','Rd.3','Rd.4','Rd.5','Rd.6','Rd.7','CSFC QF','CSFC SF','AISFC Rd.1'].map(v=>`<option value="${v}" ${roundFilter===v?'selected':''}>${v==='All'?'All Games':v}</option>`).join('')}
+          ${['All',...COMPETITION_ROUNDS['all']].map(v=>`<option value="${v}" ${roundFilter===v?'selected':''}>${v==='All'?'All Games':v}</option>`).join('')}
         </select>
       </div>
       <span style="font-size:11px;font-weight:700;color:var(--muted)">GK</span>
@@ -7097,7 +7097,7 @@ function renderOppKoPitchMap(){
       <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
         <span style="font-size:11px;font-weight:700;color:var(--muted)">Round</span>
         <select onchange="document.getElementById('opp-ko-map-wrap')._round=this.value;renderOppKoPitchMap()" style="font-size:12px;padding:4px 10px;font-weight:500;border-radius:8px;border:1px solid var(--border);color:var(--text);background:var(--white);cursor:pointer">
-          ${['All','Rd.1','Rd.2','Rd.3','Rd.4','Rd.5','Rd.6','Rd.7','CSFC QF','CSFC SF','AISFC Rd.1'].map(v=>`<option value="${v}" ${roundF===v?'selected':''}>${v==='All'?'All Games':v}</option>`).join('')}
+          ${['All',...COMPETITION_ROUNDS['all']].map(v=>`<option value="${v}" ${roundF===v?'selected':''}>${v==='All'?'All Games':v}</option>`).join('')}
         </select>
       </div>
     </div>
