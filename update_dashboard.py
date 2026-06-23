@@ -800,8 +800,8 @@ def fmt_opp_shot_map_entries(shots, round_label):
         lines.append(f"  [{s['x']},{s['y']},'{s['stype']}','{s['outcome']}','{round_label}','{s['att']}'],")
     return '\n'.join(lines) + '\n' if lines else ''
 
-def fmt_ko_pitch_entries(kos, round_label, venue):
-    v = 'H' if venue == 'Home' else 'A'
+def fmt_ko_pitch_entries(kos, round_label, gk_key):
+    v = 'H' if gk_key == 'hennelly' else 'L'
     lines = []
     for k in kos:
         lines.append(f"  [{k['x']},{k['y']},{k['won']},\"{round_label}\",\"{v}\",\"{k['loc']}\"],")
@@ -1461,7 +1461,7 @@ def update_html(html, round_label, opponent, venue, parsed, gk_key='hennelly'):
     print(f'  {"✓" if ok else "⚠"} OPP_SHOT_MAP_DATA ({len(parsed["opp_shots"])} entries)')
 
     # 4. KO_PITCH_DATA
-    new_ko = fmt_ko_pitch_entries(parsed['mayo_kos'], round_label, venue)
+    new_ko = fmt_ko_pitch_entries(parsed['mayo_kos'], round_label, gk_key)
     html, ok = insert_before_struct_close(html, 'KO_PITCH_DATA', new_ko, ']')
     print(f'  {"✓" if ok else "⚠"} KO_PITCH_DATA ({len(parsed["mayo_kos"])} entries)')
 
