@@ -79,9 +79,16 @@ def parse_xml(xml_path):
         raise ValueError("Half markers not found in XML — check file.")
 
     def game_min(ts):
+        """Cumulative game time in minutes — used for period_of / SHOT_PERIOD_DATA."""
         if ts <= H1_END:
             return (ts - H1_START) / 60.0
         return (H1_END - H1_START) / 60.0 + (ts - H2_START) / 60.0
+
+    def within_half_min(ts):
+        """Within-half elapsed minutes — used for scoreTimeline 'minute' field."""
+        if ts <= H1_END:
+            return (ts - H1_START) / 60.0
+        return (ts - H2_START) / 60.0
 
     def get_half(ts):
         return 1 if ts <= H1_END else 2
@@ -206,31 +213,31 @@ def parse_xml(xml_path):
         elif code == 'MAYO 1 POINT':
             p = first_lbl(lbls, 'Mayo Player Labels', 'Unknown')
             mayo_scores.append({'ts':ts,'type':'1pt','player':p,
-                                'half':get_half(ts),'minute':round(game_min(ts),1)})
+                                'half':get_half(ts),'minute':round(within_half_min(ts),1)})
         elif code == 'MAYO 2 POINT':
             p = first_lbl(lbls, 'Mayo Player Labels', 'Unknown')
             mayo_scores.append({'ts':ts,'type':'2pt','player':p,
-                                'half':get_half(ts),'minute':round(game_min(ts),1)})
+                                'half':get_half(ts),'minute':round(within_half_min(ts),1)})
         elif code == 'MAYO GOAL':
             p = first_lbl(lbls, 'Mayo Player Labels', 'Unknown')
             mayo_scores.append({'ts':ts,'type':'goal','player':p,
-                                'half':get_half(ts),'minute':round(game_min(ts),1)})
+                                'half':get_half(ts),'minute':round(within_half_min(ts),1)})
         elif code.endswith(' 1 POINT') and 'MAYO' not in code:
             opp = code[:-8].strip()
             p = first_lbl(lbls, f'{opp.title()} Player Labels', 'Unknown')
             opp_scores.append({'ts':ts,'type':'1pt','player':p,
-                               'half':get_half(ts),'minute':round(game_min(ts),1)})
+                               'half':get_half(ts),'minute':round(within_half_min(ts),1)})
             if opp_team_upper is None: opp_team_upper = opp
         elif code.endswith(' 2 POINT') and 'MAYO' not in code:
             opp = code[:-8].strip()
             p = first_lbl(lbls, f'{opp.title()} Player Labels', 'Unknown')
             opp_scores.append({'ts':ts,'type':'2pt','player':p,
-                               'half':get_half(ts),'minute':round(game_min(ts),1)})
+                               'half':get_half(ts),'minute':round(within_half_min(ts),1)})
         elif code.endswith(' GOAL') and 'MAYO' not in code and 'CHANCE' not in code:
             opp = code[:-5].strip()
             p = first_lbl(lbls, f'{opp.title()} Player Labels', 'Unknown')
             opp_scores.append({'ts':ts,'type':'goal','player':p,
-                               'half':get_half(ts),'minute':round(game_min(ts),1)})
+                               'half':get_half(ts),'minute':round(within_half_min(ts),1)})
 
         # ── Wides ────────────────────────────────────────────────────────
         elif code == 'MAYO WIDE':
