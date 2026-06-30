@@ -354,7 +354,7 @@ tr:hover td{background:#f9fafb}
         <select id="f-round"><option value="All">All</option></select>
       </div>
       <div class="filter-group"><div class="filter-label">Home / Away</div>
-        <select id="f-homeaway"><option>All</option><option>Home</option><option>Away</option></select>
+        <select id="f-homeaway"><option>All</option><option>Home</option><option>Away</option><option>Neutral</option></select>
       </div>
       <div class="filter-group"><div class="filter-label">Half</div>
         <select id="f-half"><option>All</option><option>1st Half</option><option>2nd Half</option></select>
@@ -6528,6 +6528,24 @@ const LINEUPS={
       {on:"C. McHale",   off:"C. Loftus",  time:40},
       {on:"M. Ruane",    off:"B. Tuohy",   time:53},
       {on:"S. Coen",     off:"J. Flynn",   time:62},
+    ]
+  },
+  "AISFC QF":{opponent:"Cork",result:"W",score:"0-23 (23)",oppScore:"0-18 (18)",
+    lines:{
+      ff:[{num:15,name:"K. McDonald"},{num:14,name:"R. O'Donoghue"},{num:13,name:"D. Beirne"}],
+      hf:[{num:12,name:"J. Flynn"},{num:23,name:"P. Towey"},{num:10,name:"S. Coen"}],
+      mid:[{num:9,name:"J. Carney"},{num:8,name:"B. Tuohy"}],
+      hb:[{num:7,name:"E. Hession"},{num:6,name:"D. McBrien"},{num:5,name:"S. Callinan"}],
+      fb:[{num:4,name:"E. McGreal"},{num:3,name:"D. McHugh"},{num:2,name:"J. Coyne"}],
+      gk:[{num:1,name:"J. Livingstone"}]
+    },
+    subs:["16. R. Hennelly","17. D. Duffy","18. J. MacMonagle","19. R. Brickenden","20. C. Dawson","21. A. O'Shea","22. M. Ruane","11. C. Loftus","24. F. Boland","25. T. Conroy","26. C. McHale"],
+    substitutions:[
+      {on:"T. Conroy",     off:"P. Towey",   time:38},
+      {on:"C. Loftus",     off:"S. Coen",    time:49},
+      {on:"M. Ruane",      off:"B. Tuohy",   time:56},
+      {on:"D. Duffy",      off:"J. Flynn",   time:69},
+      {on:"R. Brickenden", off:"E. McGreal", time:69},
     ]
   }
 };
