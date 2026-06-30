@@ -6580,17 +6580,22 @@ function renderPitch(roundKey){
   });
 
   // Populate subs bar with green ↑ badge for players who came on
+  // (and a red ↓ badge too, if that sub was later subbed off themselves)
   const subsEl=document.getElementById('ts-subs-list');
   if(subsEl){
     subsEl.innerHTML=(data.subs||[]).map(s=>{
       const name=s.replace(/^\d+\.\s*/,'');
-      const sub=subOnMap[name];
-      const badge=sub
-        ?` <span style="background:#16A34A;color:#fff;border-radius:8px;font-size:8px;font-weight:800;padding:1px 5px">↑${fmtTime(sub.time)}</span>`
+      const onSub =subOnMap[name];
+      const offSub=subOffMap[name];
+      const onBadge=onSub
+        ?` <span style="background:#16A34A;color:#fff;border-radius:8px;font-size:8px;font-weight:800;padding:1px 5px">↑${fmtTime(onSub.time)}</span>`
         :'';
-      const bg=sub?'#DCFCE7':'var(--green-light)';
-      const border=sub?'1px solid #16A34A':'1px solid transparent';
-      return `<span style="font-size:11px;font-weight:600;color:var(--text);background:${bg};border-radius:6px;padding:3px 8px;white-space:nowrap;border:${border}">${s}${badge}</span>`;
+      const offBadge=offSub
+        ?` <span style="background:#DC2626;color:#fff;border-radius:8px;font-size:8px;font-weight:800;padding:1px 5px">↓${fmtTime(offSub.time)}</span>`
+        :'';
+      const bg=onSub?'#DCFCE7':'var(--green-light)';
+      const border=onSub?'1px solid #16A34A':'1px solid transparent';
+      return `<span style="font-size:11px;font-weight:600;color:var(--text);background:${bg};border-radius:6px;padding:3px 8px;white-space:nowrap;border:${border}">${s}${onBadge}${offBadge}</span>`;
     }).join('');
   }
 }
