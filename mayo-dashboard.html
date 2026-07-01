@@ -342,7 +342,7 @@ tr:hover td{background:#f9fafb}
   <header id="topbar">
     <div style="display:flex;flex-direction:column;gap:6px">
       <div class="topbar-title">Mayo Performance Dashboard</div>
-      <div class="topbar-sub">2026 NFL & Champ. — 10 Games</div>
+      <div class="topbar-sub">2026 NFL & Champ. — 13 Games</div>
       <div id="comp-tabs" style="display:flex;gap:0;border-radius:8px;overflow:hidden;border:1px solid var(--border);width:fit-content">
         <button class="comp-tab active" data-comp="all" onclick="setComp('all')" style="padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;border:none;border-right:1px solid var(--border);background:var(--green);color:#fff">All Games</button>
         <button class="comp-tab" data-comp="league" onclick="setComp('league')" style="padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;border:none;border-right:1px solid var(--border);background:var(--bg);color:var(--text)">League</button>
@@ -1641,18 +1641,19 @@ const KO_PITCH_DATA=[
 ];
 
 /// Mayo KO zone scoring: goals, 2-pointers, 1-pointers from immediate possession after each won KO
-// Source: user-verified web analysis — Grand Total: 152 KOs, 104 won, 17 scores (2G + 1×2pt + 14×1pt)
-// Zone 9 holds the only 2-pointer; all goals are from long zones (7 & 8)
+// Source: computed from all 13 XMLs — a score counts if it's the very next scoring event after
+// a won Mayo kickout, within 45s, with no turnover/wide/opposition score/next kickout in between.
+// Grand Total: 193 won KOs, 48 direct scores (3G + 9×2pt + 36×1pt = 63 pts, ~19.5% of season total)
 const KO_ZONE_SCORES={
   'Zone 1':{g:0,p2:0,p1:0},
-  'Zone 2':{g:0,p2:0,p1:0},
-  'Zone 3':{g:0,p2:0,p1:3},
-  'Zone 4':{g:0,p2:0,p1:1},
-  'Zone 5':{g:0,p2:0,p1:4},
-  'Zone 6':{g:0,p2:0,p1:3},
-  'Zone 7':{g:1,p2:0,p1:0},
-  'Zone 8':{g:1,p2:0,p1:1},
-  'Zone 9':{g:0,p2:1,p1:2},
+  'Zone 2':{g:0,p2:1,p1:0},
+  'Zone 3':{g:1,p2:0,p1:2},
+  'Zone 4':{g:0,p2:3,p1:5},
+  'Zone 5':{g:0,p2:0,p1:7},
+  'Zone 6':{g:1,p2:0,p1:5},
+  'Zone 7':{g:1,p2:1,p1:8},
+  'Zone 8':{g:0,p2:2,p1:2},
+  'Zone 9':{g:0,p2:2,p1:7},
 };
 
 // Shot map data: [X-Shot, Y-Shot, type, outcome, round, player, attemptType]
